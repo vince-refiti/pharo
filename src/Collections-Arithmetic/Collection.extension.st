@@ -59,12 +59,13 @@ Collection >> arcTan [
 
 { #category : #'*Collections-Arithmetic' }
 Collection >> average [
-	"
-	Calculate the average of a collection, return a CollectionIsEmpty exception if the collection is empty.
-	Look averageIfEmpty: aBlock
-	#(3 5 7) average 
-	>>> 5
-	"
+	"Calculate the average of a collection, return a CollectionIsEmpty exception if the collection is empty. Look averageIfEmpty: aBlock"
+	
+	" #(2 6 7) average   
+	>>> 5 "
+	
+	" #(3 5 7 7) average 
+	>>> (11/2) "
 
 	^ self sum / self size
 ]
@@ -185,6 +186,18 @@ Collection >> sqrt [
 { #category : #'*Collections-arithmetic-collectors' }
 Collection >> squared [
 	^ self collect: [:each | each * each]
+]
+
+{ #category : #'*Collections-Arithmetic' }
+Collection >> stdev [
+	| avg sample sum |
+	"In statistics, the standard deviation is a measure that is used to quantify the amount of variation or dispersion of a set of data values.
+	For details about implementation see comment in self sum."
+	avg := self average.
+	sample := self anyOne.
+	sum := self inject: sample into: [ :accum :each | accum + (each - avg) squared ].
+	sum := sum - sample.
+	^ (sum / (self size - 1)) sqrt
 ]
 
 { #category : #'*Collections-arithmetic' }

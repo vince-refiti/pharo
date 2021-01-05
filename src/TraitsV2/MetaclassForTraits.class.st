@@ -41,7 +41,7 @@ MetaclassForTraits >> asTraitComposition [
 	^ TaClassCompositionElement for: self
 ]
 
-{ #category : #'fileIn/Out' }
+{ #category : #'file in/out' }
 MetaclassForTraits >> definition [
 	^ String streamContents: [ :s | 
 		s nextPutAll: self instanceSide name;
@@ -91,9 +91,8 @@ MetaclassForTraits >> isTraitExclusion [
 
 { #category : #accessing }
 MetaclassForTraits >> name [
-	^ thisClass isNil
-		ifTrue: [ 'a MetaclassForTraits' ]
-		ifFalse: [ thisClass name asString, ' classTrait' ]
+
+	^ thisClass ifNil: [ 'a MetaclassForTraits' ] ifNotNil: [ thisClass name asString , ' classTrait' ]
 ]
 
 { #category : #'organization updating' }

@@ -22,10 +22,11 @@ CatalogSettings class >> catalogSettingsOn: aBuilder [
 			(aBuilder setting: #displayCatalogProjectsInSpotter)
 						target: self;
 						label: 'Display catalog projects in Spotter';
-						default: true.
+						default: false.
 			(aBuilder setting: #catalogSourceURL)
 				target: self;
 				label: 'Source URL' ;
+				default: 'http://catalog.pharo.org/catalog/json';
 				ghostHelp: 'http://pathTo.url/json';
 				description: 'Enter the source URL used to retrieve catalog information'			
 		]
@@ -35,8 +36,7 @@ CatalogSettings class >> catalogSettingsOn: aBuilder [
 CatalogSettings class >> catalogSourceURL [
 	"Return the source URL for retrieving catalog infos"
 	
-	CatalogSourceURL ifNil: [ CatalogSourceURL := self defaultCatalogSourceURL ].
-	^CatalogSourceURL
+	^ CatalogSourceURL ifNil: [ CatalogSourceURL := self defaultCatalogSourceURL ]
 ]
 
 { #category : #accessing }
@@ -56,8 +56,7 @@ CatalogSettings class >> defaultCatalogSourceURL [
 CatalogSettings class >> displayCatalogProjectsInSpotter [
 	"Return true if the catalog projects should be displayed in spotter, false otherwise"
 	
-	DisplayCatalogProjectsInSpotter ifNil: [ DisplayCatalogProjectsInSpotter := true ].
-	^DisplayCatalogProjectsInSpotter
+	^ DisplayCatalogProjectsInSpotter ifNil: [ DisplayCatalogProjectsInSpotter := true ]
 ]
 
 { #category : #accessing }

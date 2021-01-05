@@ -66,6 +66,18 @@ FileSystem >> accessTimeOf: aResolvable [
 ]
 
 { #category : #public }
+FileSystem >> beReadOnly [
+
+	store := store asReadOnlyStore
+]
+
+{ #category : #public }
+FileSystem >> beWritable [
+
+	store := store asWritableStore
+]
+
+{ #category : #public }
 FileSystem >> binaryReadStreamOn: aResolvable [
 	"Resolve the argument into an absolute path and open a file handle on the file
 	at that path. Ask the handle to give us a read stream for reading the file."
@@ -240,7 +252,7 @@ FileSystem >> copyFileAndDelete: sourcePath to: destination [
 	[self copy: sourcePath toReference: destination] 
 		on: Error 
 		do: [ :error |
-			destination delete.
+			destination ensureDelete.
 			error signal].
 	self delete: sourcePath.
 	^destination
@@ -490,7 +502,7 @@ FileSystem >> hash [
 	^ store hash
 ]
 
-{ #category : #'initialize-release' }
+{ #category : #initialization }
 FileSystem >> initializeWithStore: aStore [
 	store := aStore
 ]
@@ -553,6 +565,14 @@ FileSystem >> isFile: aResolvable [
 ]
 
 { #category : #'public-testing' }
+FileSystem >> isHidden: aResolvable attributes: statAttributesArray [
+	"Resolve the argument, and answer a boolean indicating whether the file is hidden or not.
+	statAttributesArray is optional and may be supplied for performance.  It is the result of File>>fileAttributes:mask: or nil"
+
+	^ store isHidden: (self resolve: aResolvable) attributes: statAttributesArray 
+]
+
+{ #category : #'public-testing' }
 FileSystem >> isReadable: aResolvable [
 	"Resolve the argument, and answer true if the there is
 	a file or directory that can be read from."
@@ -583,17 +603,17 @@ FileSystem >> isSymlink: aResolvable [
 ]
 
 { #category : #'public-testing' }
+FileSystem >> isWritable [ 
+
+	^ self store isWritable
+]
+
+{ #category : #'public-testing' }
 FileSystem >> isWritable: aResolvable [
 	"Resolve the argument, and answer true if the there is
 	a file that can be written to or directory that can be changed."
 	
 	^ store isWritable: (self resolve: aResolvable)
-]
-
-{ #category : #public }
-FileSystem >> mimeTypesAt: aResolvable [
-	"Return the possible mime types for the given path."
-	^ store mimeTypesAt: (self resolve: aResolvable)
 ]
 
 { #category : #public }
@@ -790,6 +810,11 @@ FileSystem >> sizeOf: aResolvable [
 { #category : #accessing }
 FileSystem >> store [
 	^ store
+]
+
+{ #category : #accessing }
+FileSystem >> store: aFileSystemStore [
+	store := aFileSystemStore
 ]
 
 { #category : #converting }

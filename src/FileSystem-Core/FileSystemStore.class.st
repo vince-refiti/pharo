@@ -249,7 +249,7 @@ FileSystemStore >> directoryAt: aPath nodesDo: aBlock [
 
 { #category : #public }
 FileSystemStore >> ensureCreateDirectory: aPath [
-	(self isDirectory: aPath) ifTrue: [ ^ self ].
+	((self exists: aPath) and: [ self isDirectory: aPath]) ifTrue: [ ^ self ].
 	self ensureCreateDirectory: aPath parent.
 	self createDirectory: aPath
 ]
@@ -258,18 +258,6 @@ FileSystemStore >> ensureCreateDirectory: aPath [
 FileSystemStore >> entryAt: aPath fileSystem: aFilesystem [
 
 	self checkExists: aPath.
-	^ FileSystemDirectoryEntry
-		fileSystem: aFilesystem
-		path: aPath
-]
-
-{ #category : #private }
-FileSystemStore >> entryFromNode: aNode fileSystem: aFilesystem path: aPath [
-
-	self 
-		deprecated: 'Use FileSystemDirectoryEntry class>>fileSystem:path:'
-		on: 	'30 Apr 2017' 
-		in: 'Pharo-7.0'.
 	^ FileSystemDirectoryEntry
 		fileSystem: aFilesystem
 		path: aPath
@@ -393,15 +381,6 @@ FileSystemStore >> isWritable: aPath [
 		ifPresent: [ :entry | ^ self basicIsWritable: entry ] 
 		ifAbsent: [ ^ false ].
 	
-]
-
-{ #category : #public }
-FileSystemStore >> mimeTypesAt: aPath [
-	| mimeType |
-	mimeType := ZnMimeType 
-						forFilenameExtension: aPath extension 
-						ifAbsent: [  ^ nil ].
-	^ Array with: mimeType
 ]
 
 { #category : #public }

@@ -19,7 +19,9 @@ LiteralVariable >> assignmentNodes [
 
 { #category : #'*Reflectivity' }
 LiteralVariable >> astNodes [
-	self subclassResponsibility
+	"by default we search the usingMethods for all AST nodes"
+	^self usingMethods flatCollect: [ :method | 
+		method variableNodes select: [: each| each binding variable == self ]]
 ]
 
 { #category : #'*Reflectivity' }
@@ -123,6 +125,11 @@ LiteralVariable >> postambles [
 { #category : #'*Reflectivity' }
 LiteralVariable >> preambles [
 	^ self propertyAt: #preambles ifAbsent: #()
+]
+
+{ #category : #'*Reflectivity' }
+LiteralVariable >> readNodes [
+	^ self astNodes select: [ :each | each isRead ]
 ]
 
 { #category : #'*Reflectivity' }

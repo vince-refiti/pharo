@@ -37,7 +37,7 @@ RBReturnNode >> = anObject [
 ]
 
 { #category : #visiting }
-RBReturnNode >> acceptVisitor: aProgramNodeVisitor [ 
+RBReturnNode >> acceptVisitor: aProgramNodeVisitor [
 	^ aProgramNodeVisitor visitReturnNode: self
 ]
 
@@ -58,15 +58,6 @@ RBReturnNode >> copyInContext: aDictionary [
 		yourself
 ]
 
-{ #category : #accessing }
-RBReturnNode >> dumpOn: aStream [
-	aStream
-		nextPutAll: self class name;
-		nextPutAll: ' value: ('.
-	self value dumpOn: aStream.
-	aStream nextPut: $)
-]
-
 { #category : #comparing }
 RBReturnNode >> equalTo: anObject withMapping: aDictionary [ 
 	^self class = anObject class 
@@ -80,11 +71,9 @@ RBReturnNode >> hash [
 
 { #category : #initialization }
 RBReturnNode >> initialize [
-
 	super initialize.
 
-	return := 0.
-	value := nil.
+	return := 0
 ]
 
 { #category : #testing }

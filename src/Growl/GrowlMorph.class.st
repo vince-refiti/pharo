@@ -21,7 +21,6 @@ Class {
 		'alpha',
 		'actionBlock',
 		'vanishDelay',
-		'attr',
 		'labelAttr',
 		'contentsAttr',
 		'labelColor',
@@ -67,7 +66,7 @@ GrowlMorph class >> growlSettingsOn: aBuilder [
 			(aBuilder pickOne: #position)
 				label: 'Popup position';
 				target: self;
-				default: #topRight;
+				default: #bottomLeft;
 				order: 2;
 				domainValues: self growlPositionChoices.]
 ]
@@ -178,7 +177,7 @@ GrowlMorph >> actionBlock: aBlock [
 { #category : #internal }
 GrowlMorph >> activeGrowlMorphs [
 
-	^World submorphs select: [ :morph | morph isKindOf: GrowlMorph ].
+	^self currentWorld submorphs select: [ :morph | morph isKindOf: GrowlMorph ].
 ]
 
 { #category : #accessing }
@@ -277,7 +276,7 @@ GrowlMorph >> handlesMouseDown: evt [
 { #category : #initialization }
 GrowlMorph >> initialize [
 	super initialize.
- 	self  borderStyle: BorderStyle thinGray.
+ 	self  borderStyle: (BorderStyle color: self defaultBorderColor width: 1).
 	
 	self setProperty: #autoFitContents toValue: false.
  
@@ -370,7 +369,7 @@ GrowlMorph >> resetVanishTimer [
 	self resetAlpha.
 ]
 
-{ #category : #'stepping and presenter' }
+{ #category : #stepping }
 GrowlMorph >> step [
 
 	(self containsPoint: ActiveHand position) ifTrue: [
@@ -380,7 +379,7 @@ GrowlMorph >> step [
 	self alpha: self alpha - 0.05.
 ]
 
-{ #category : #'stepping and presenter' }
+{ #category : #stepping }
 GrowlMorph >> stepTime [
 	^ 100
 ]
@@ -416,7 +415,7 @@ GrowlMorph >> unoccupiedPositionBottomLeft [
 	| startPos area rect morphs |
 	
 	startPos := 10 negated @ (self height + 10).
-	area := World clearArea.
+	area := self currentWorld clearArea.
 	rect := (area bottomLeft - startPos) extent: self extent.
 	
 	morphs := self activeGrowlMorphs.
@@ -433,7 +432,7 @@ GrowlMorph >> unoccupiedPositionBottomRight [
 	| startPos area rect morphs |
 	
 	startPos := (self width + 10 ) @ (self height + 10).
-	area := World clearArea.
+	area := self currentWorld clearArea.
 	rect := (area bottomRight - startPos) extent: self extent.
 	
 	morphs := self activeGrowlMorphs.	
@@ -450,7 +449,7 @@ GrowlMorph >> unoccupiedPositionTopLeft [
 	| startPos area rect morphs |
 	
 	startPos := 10@10.
-	area := World clearArea.
+	area := self currentWorld clearArea.
 	rect := area topLeft + (startPos) extent: self extent.
 	
 	morphs := self activeGrowlMorphs.
@@ -467,7 +466,7 @@ GrowlMorph >> unoccupiedPositionTopRight [
 	| startPos area rect morphs |
 	
 	startPos := (self width + 10 @ 10 negated).
-	area := World clearArea.
+	area := self currentWorld clearArea.
 	rect := (area topRight - startPos) extent: self extent.
 	
 	morphs := self activeGrowlMorphs.	
@@ -492,7 +491,7 @@ GrowlMorph >> vanishDelay: aDuration [
 	self resetVanishTimer
 ]
 
-{ #category : #'stepping and presenter' }
+{ #category : #stepping }
 GrowlMorph >> wantsSteps [
 	^ true
 ]

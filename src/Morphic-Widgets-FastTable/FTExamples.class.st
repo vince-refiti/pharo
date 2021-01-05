@@ -19,7 +19,6 @@ FTExamples class >> example1 [
 			sorted: [ :a :b | a name < b name]));
 		yourself.
 	list openInWindow
-
 ]
 
 { #category : #examples }
@@ -349,7 +348,7 @@ FTExamples class >> exampleList3 [
 		dataSource: (FTExampleMethodListDataSource for: Object);
 		selectIndex: 42;
 		showFirstSelection;
-		onAnnouncement: FTSelectionChanged do: [ :ann | ('row selected: ' , ann newSelectedRowIndexes asString) crLog ];
+		onAnnouncement: FTSelectionChanged do: [ :ann | ('row selected: ' , ann newSelectedIndexes asString) crTrace ];
 		yourself.
 
 	^ list openInWindow
@@ -370,10 +369,12 @@ FTExamples class >> exampleList4 [
 		dataSource: (FTExampleMethodListDataSource for: Object);
 		selectIndex: 42;
 		showFirstSelection;
-		onAnnouncement: FTSelectionChanged do: [ :ann | ('row selected: ' , ann newSelectedRowIndexes asString) crLog ];
-		onAnnouncement: FTStrongSelectionChanged do: [ :ann | ('double-click on row: ' , ann selectedIndex asString) crLog ];
+		onAnnouncement: FTSelectionChanged
+			do: [ :ann | ('row selected: ' , ann newSelectedIndexes asString) crTrace ];
+		onAnnouncement: FTStrongSelectionChanged
+			do:
+				[ :ann | ('double-click on row: ' , ann selectedIndex asString) crTrace ];
 		yourself.
-
 	^ list openInWindow
 ]
 
@@ -393,8 +394,8 @@ FTExamples class >> exampleList5 [
 		dataSource: (FTExampleMethodListDataSource for: Object);
 		selectIndexes: #(42 43);
 		showFirstSelection;
-		onAnnouncement: FTSelectionChanged do: [ :ann | ('rows selected: ' , ann newSelectedRowIndexes asString) crLog ];
-		onAnnouncement: FTStrongSelectionChanged do: [ :ann | ('double-click on row: ' , ann selectedIndex asString) crLog ];
+		onAnnouncement: FTSelectionChanged do: [ :ann | ('rows selected: ' , ann newSelectedIndexes asString) crTrace ];
+		onAnnouncement: FTStrongSelectionChanged do: [ :ann | ('double-click on row: ' , ann selectedIndex asString) crTrace ];
 		beMultipleSelection;
 		yourself.
 
@@ -420,8 +421,11 @@ FTExamples class >> exampleListWithExplicitFilterAndActionButton [
 	| list |
 	list := FTTableMorph new
 		extent: 300 @ 300;
-		dataSource: (FTExampleDataSource elements: (Smalltalk allClassesAndTraits sorted: [ :a :b | a name < b name ]));
-		enableFilterWithAction: [ :dataSource :searchPattern | Transcript crShow: searchPattern ] named: 'Show';
+		dataSource:
+			(FTExampleDataSource
+				elements: (Smalltalk allClassesAndTraits sorted: [ :a :b | a name < b name ]));
+		enableFilterWithAction: [ :dataSource :searchPattern | self crTrace: searchPattern ]
+			named: 'Show';
 		yourself.
 	list openInWindow
 ]
@@ -449,6 +453,22 @@ FTExamples class >> exampleListWithExplicitSearch [
 		explicitFunction;
 		yourself.
 	list openInWindow
+]
+
+{ #category : #examples }
+FTExamples class >> exampleListWithHeader [
+	"Show a list with all Object methods with a header"
+
+	<example>
+	<sampleInstance>
+	| list |
+	list := FTTableMorph new
+		extent: 300 @ 550;
+		addColumn: (FTColumn id: 'Method name');
+		dataSource: (FTExampleMethodListDataSource for: Object);
+		yourself.
+
+	^ list openInWindow
 ]
 
 { #category : #examples }
@@ -483,6 +503,178 @@ FTExamples class >> exampleOutline2 [
 ]
 
 { #category : #examples }
+FTExamples class >> exampleRowNotHomogeneousList1 [
+	"Show a list with all Object methods"
+	<example>
+	| list |
+
+	list := FTTableMorph new
+		extent: 300@550;
+		beRowNotHomogeneous;
+		dataSource: (FTExampleMethodNotHomogeneousListDataSource for: Object);
+		yourself.
+		
+	^ list openInWindow
+]
+
+{ #category : #examples }
+FTExamples class >> exampleSortableList [
+	"Show a list with all Object methods with a header"
+
+	<example>
+	<sampleInstance>
+	| list |
+	list := FTTableMorph new
+		extent: 300 @ 550;
+		addColumn:
+			((FTColumn id: 'Class name')
+				sortableOnProperty: #printString;
+				yourself);
+		dataSource: (FTExampleDataSource elements: Smalltalk allClassesAndTraits shuffled);
+		yourself.
+
+	^ list openInWindow
+]
+
+{ #category : #examples }
+FTExamples class >> exampleSortableList2 [
+	"Show a list with all Object methods with a header"
+
+	<example>
+	<sampleInstance>
+	| list |
+	list := FTTableMorph new
+		extent: 300 @ 550;
+		addColumn:
+			((FTColumn id: 'Class name')
+				sortableUsing: #printString ascending;
+				yourself);
+		dataSource: (FTExampleDataSource elements: Smalltalk allClassesAndTraits shuffled);
+		yourself.
+
+	^ list openInWindow
+]
+
+{ #category : #examples }
+FTExamples class >> exampleSortableTable1 [
+	"Show a table with all Object methods"
+
+	<sampleInstance>
+	<example>
+	| table |
+	table := FTTableMorph new
+		extent: 650 @ 500;
+		addColumn:
+			((FTColumn id: 'Name')
+				sortableOnProperty: #name;
+				yourself);
+		addColumn:
+			((FTColumn id: 'Protocol')
+				sortableOnProperty: #protocol;
+				yourself);
+		addColumn:
+			((FTColumn id: 'Origin')
+				sortableOnProperty: [ :entity | entity origin name ];
+				yourself);
+		dataSource: (FTExampleMethodTableDataSource for: Object);
+		selectFirst;
+		showFirstSelection;
+		onAnnouncement: FTSelectionChanged do: [ :ann | ('rows selected: ' , ann newSelectedIndexes asString) crTrace ];
+		onAnnouncement: FTStrongSelectionChanged do: [ :ann | ('double-click on row: ' , ann selectedIndex asString) crTrace ];
+		beMultipleSelection;
+		beResizable;
+		yourself.
+
+	^ table openInWindow
+]
+
+{ #category : #examples }
+FTExamples class >> exampleSortableTable2 [
+	"Show a table with all Object methods"
+
+	<sampleInstance>
+	<example>
+	| table |
+	table := FTTableMorph new
+		extent: 650 @ 500;
+		addColumn:
+			((FTColumn id: 'Icon')
+				width: 40;
+				yourself);
+		addColumn:
+			((FTColumn id: 'Name')
+				sortableOnProperty: #name;
+				yourself);
+		addColumn:
+			((FTColumn id: 'Number of methods')
+				sortableOnProperty: #numberOfMethods;
+				yourself);
+		addColumn:
+			((FTColumn id: 'Number of instance variables')
+				sortableOnProperty: #instSize;
+				yourself);
+		dataSource: FTExampleClassInfoTableDataSource new;
+		selectFirst;
+		showFirstSelection;
+		beResizable;
+		yourself.
+
+	^ table openInWindow
+]
+
+{ #category : #examples }
+FTExamples class >> exampleSortableTable3 [
+	"Show a table with all Object methods"
+
+	<sampleInstance>
+	<example>
+	| table |
+	table := FTTableMorph new
+		extent: 650 @ 500;
+		addColumn:
+			((FTColumn id: 'Icon')
+				width: 40;
+				yourself);
+		addColumn:
+			((FTColumn id: 'Name')
+				sortableUsing: #name ascending;
+				yourself);
+		addColumn:
+			((FTColumn id: 'Number of methods')
+				sortableUsing: #numberOfMethods ascending , #name ascending; "Sort by number of methods, if the same, sort by name."
+				yourself);
+		addColumn:
+			((FTColumn id: 'Number of instance variables')
+				sortableUsing: #instSize ascending , #name ascending; "Sort by number of inst var, if the same, sort by name."
+				yourself);
+		dataSource: FTExampleClassInfoTableDataSource new;
+		selectFirst;
+		showFirstSelection;
+		beResizable;
+		yourself.
+
+	^ table openInWindow
+]
+
+{ #category : #examples }
+FTExamples class >> exampleSortableTree [
+	"Show a list with all Object methods with a header"
+
+	<example>
+	<sampleInstance>
+	| ds |
+	ds := FTTreeDataSource roots: (ProtoObject allSubclasses reject: [ :e | e isMeta ]) children: [ :data | data subclasses ].
+	FTTableMorph new
+		extent: 200 @ 400;
+		addColumn:
+			((FTColumn id: 'Class name')
+				sortableOnProperty: #printString;
+				yourself);
+		dataSource: ds;
+		openInWindow
+]
+
+{ #category : #examples }
 FTExamples class >> exampleTable1 [
 	"Show a table with all Object methods"
 
@@ -495,10 +687,10 @@ FTExamples class >> exampleTable1 [
 		addColumn: (FTColumn id: 'Protocol');
 		addColumn: (FTColumn id: 'Origin');
 		dataSource: (FTExampleMethodTableDataSource for: Object);
-		selectIndex: 1;
+		selectFirst;
 		showFirstSelection;
-		onAnnouncement: FTSelectionChanged do: [ :ann | ('rows selected: ' , ann newSelectedRowIndexes asString) crLog ];
-		onAnnouncement: FTStrongSelectionChanged do: [ :ann | ('double-click on row: ' , ann selectedIndex asString) crLog ];
+		onAnnouncement: FTSelectionChanged do: [ :ann | ('rows selected: ' , ann newSelectedIndexes asString) crTrace ];
+		onAnnouncement: FTStrongSelectionChanged do: [ :ann | ('double-click on row: ' , ann selectedIndex asString) crTrace ];
 		beMultipleSelection;
 		beResizable;
 		yourself.
@@ -519,10 +711,10 @@ FTExamples class >> exampleTable2 [
 		addColumn: (FTColumn id: 'Protocol');
 		addColumn: (FTColumn id: 'Origin');
 		dataSource: (FTExampleMethodTableDataSource for: Morph);
-		selectIndex: 1;
+		selectFirst;
 		showFirstSelection;
-		onAnnouncement: FTSelectionChanged do: [ :ann | ('rows selected: ' , ann newSelectedRowIndexes asString) crLog ];
-		onAnnouncement: FTStrongSelectionChanged do: [ :ann | ('double-click on row: ' , ann selectedIndex asString) crLog ];
+		onAnnouncement: FTSelectionChanged do: [ :ann | ('rows selected: ' , ann newSelectedIndexes asString) crTrace ];
+		onAnnouncement: FTStrongSelectionChanged do: [ :ann | ('double-click on row: ' , ann selectedIndex asString) crTrace ];
 		beMultipleSelection;
 		beResizable;
 		yourself.
@@ -545,10 +737,10 @@ FTExamples class >> exampleTable3 [
 		addColumn: (FTColumn id: 'Origin');
 		intercellSpacing: 1;
 		dataSource: (FTExampleMethodTableDataSource for: Morph);
-		selectIndex: 1;
+		selectFirst;
 		showFirstSelection;
-		onAnnouncement: FTSelectionChanged do: [ :ann | ('rows selected: ' , ann newSelectedRowIndexes asString) crLog ];
-		onAnnouncement: FTStrongSelectionChanged do: [ :ann | ('double-click on row: ' , ann selectedIndex asString) crLog ];
+		onAnnouncement: FTSelectionChanged do: [ :ann | ('rows selected: ' , ann newSelectedIndexes asString) crTrace ];
+		onAnnouncement: FTStrongSelectionChanged do: [ :ann | ('double-click on row: ' , ann selectedIndex asString) crTrace ];
 		beMultipleSelection;
 		beResizable;
 		yourself.
@@ -573,14 +765,36 @@ FTExamples class >> exampleTable4 [
 		beResizable;
 		intercellSpacing: 8 @ 1;
 		dataSource: (FTExampleMethodTableDataSource for: Morph);
-		selectIndex: 1;
+		selectFirst;
 		showFirstSelection;
-		onAnnouncement: FTSelectionChanged do: [ :ann | ('rows selected: ' , ann newSelectedRowIndexes asString) crLog ];
-		onAnnouncement: FTStrongSelectionChanged do: [ :ann | ('double-click on row: ' , ann selectedIndex asString) crLog ];
+		onAnnouncement: FTSelectionChanged do: [ :ann | ('rows selected: ' , ann newSelectedIndexes asString) crTrace ];
+		onAnnouncement: FTStrongSelectionChanged do: [ :ann | ('double-click on row: ' , ann selectedIndex asString) crTrace ];
 		beMultipleSelection;
 		beResizable;
 		yourself.
 
+	^ table openInWindow
+]
+
+{ #category : #examples }
+FTExamples class >> exampleTable5 [
+	"Show a table with cell selection mode"
+
+	<sampleInstance>
+	<example>
+	| table ds |
+	ds := FTExampleMethodTableDataSource for: Object.
+	table := FTTableMorph new
+		extent: 650 @ 500;
+		beCellSelection;
+		addColumn: (FTColumn id: 'Name');
+		addColumn: (FTColumn id: 'Protocol');
+		addColumn: (FTColumn id: 'Origin');
+		dataSource: ds;
+		selectFirst;
+		beMultipleSelection;
+		showFirstSelection;
+		yourself.
 	^ table openInWindow
 ]
 
@@ -593,7 +807,7 @@ FTExamples class >> exampleTableHorizontalScroll [
 
 	<example>
 	| table |
-	table := FTTableMorph newTrialHorizontalScrollBar
+	table := FTTableMorph newWithHorizontalScrollBar
 		extent: 650 @ 500;
 		addColumn: ((FTColumn id: '#') width: 40);
 		addColumn: ((FTColumn id: 'Name') width: 350);
@@ -601,10 +815,10 @@ FTExamples class >> exampleTableHorizontalScroll [
 		addColumn: ((FTColumn id: 'Origin') width: 200);
 		intercellSpacing: 1;
 		dataSource: (FTExampleMethodTableDataSource for: Morph);
-		selectIndex: 1;
+		selectFirst;
 		showFirstSelection;
-		onAnnouncement: FTSelectionChanged do: [ :ann | ('rows selected: ' , ann newSelectedRowIndexes asString) crLog ];
-		onAnnouncement: FTStrongSelectionChanged do: [ :ann | ('double-click on row: ' , ann selectedIndex asString) crLog ];
+		onAnnouncement: FTSelectionChanged do: [ :ann | ('rows selected: ' , ann newSelectedIndexes asString) crTrace ];
+		onAnnouncement: FTStrongSelectionChanged do: [ :ann | ('double-click on row: ' , ann selectedIndex asString) crTrace ];
 		beMultipleSelection;
 		yourself.
 

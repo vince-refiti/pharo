@@ -35,7 +35,7 @@ ClassFactoryWithOrganization >> newClassNamed: aString subclassOf: aClass instan
 		subclassOf: aClass 
 		instanceVariableNames: ivNamesString 
 		classVariableNames: classVarsString 
-		category:  (self packageName, '-', self defaultCategoryPostfix) asSymbol.
+		category:  (self packageName, '-', self defaultTagPostfix) asSymbol.
 ]
 
 { #category : #creating }
@@ -51,8 +51,7 @@ ClassFactoryWithOrganization >> newClassNamed: aString subclassOf: aClass instan
 				sharedVariablesFromString: classVarsString;
 				sharedPools: '';
 				category: category asSymbol;
-				environment: self organization environment;
-				copyClassSlotsFromExistingClass ].
+				environment: self organization environment ].
 	self createdClasses add: newClass.
 	^ newClass
 ]
@@ -63,7 +62,7 @@ ClassFactoryWithOrganization >> newSubclassOf: aClass instanceVariableNames: ivN
 		newSubclassOf: aClass 
 		instanceVariableNames: ivNamesString 
 		classVariableNames: classVarsString 
-		category:  (self packageName, '-', self defaultCategoryPostfix) asSymbol.
+		category:  (self packageName, '-', self defaultTagPostfix) asSymbol.
 ]
 
 { #category : #creating }
@@ -79,8 +78,7 @@ ClassFactoryWithOrganization >> newSubclassOf: aClass instanceVariableNames: ivN
 				sharedVariablesFromString: classVarsString;
 				sharedPools: '';
 				category: category asSymbol;
-				environment: self organization environment;
-				copyClassSlotsFromExistingClass ].
+				environment: self organization environment ].
 	self createdClasses add: newClass.
 	^ newClass
 ]

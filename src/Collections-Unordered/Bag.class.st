@@ -84,14 +84,12 @@ Bag >> asSet [
 	^ contents keys asSet
 ]
 
-{ #category : #accessing }
-Bag >> at: index [ 
-	self errorNotKeyed
-]
+{ #category : #enumerating }
+Bag >> associationsDo: aBlock [
+	"Evaluate aBlock for each of the receiver's elements (key/value 
+	associations).  Provided for compatibility with Dictionaries"
 
-{ #category : #accessing }
-Bag >> at: index put: anObject [ 
-	self errorNotKeyed
+	contents associationsDo: aBlock
 ]
 
 { #category : #accessing }
@@ -124,8 +122,8 @@ Bag >> doWithOccurrences: aTwoArgBlock [
 Bag >> includes: anObject [ 
 	"Answer whether anObject is one of the receiver's elements."
 
-	"#(1 2 2 3 1 1 1) includes: 5 >>> false"
-	"#(1 2 2 3 1 1 1) includes: 1 >>> true"
+	"(#(1 2 2 3 1 1 1) includes: 5) >>> false"
+	"(#(1 2 2 3 1 1 1) includes: 1) >>> true"
 	
 	^ contents includesKey: anObject
 ]
@@ -141,7 +139,7 @@ Bag >> keysAndValuesDo: aTwoArgBlock [
 Bag >> occurrencesOf: anObject [ 
 	"Answer how many of the receiver's elements are equal to anObject."
 	
-	"#(1 2 2 3 1 1 1) asBag occurrencesOf: 1 >>> 4"
+	"(#(1 2 2 3 1 1 1) asBag occurrencesOf: 1) >>> 4"
 	
 	^ (self includes: anObject)
 		ifTrue: [ contents at: anObject]

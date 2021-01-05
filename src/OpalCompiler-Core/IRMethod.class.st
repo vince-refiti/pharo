@@ -122,7 +122,7 @@ IRMethod >> compilationContext: aCompilationContext [
 	compilationContext := aCompilationContext
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #translating }
 IRMethod >> compiledBlock: scope [
 
 	^compiledMethod 
@@ -193,7 +193,7 @@ IRMethod >> generate: trailer [
 	^ compiledMethod
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #translating }
 IRMethod >> generateBlock: trailer withScope: scope [
 	| irTranslator |
       irTranslator := IRTranslatorV2 context: compilationContext trailer: trailer.
@@ -203,12 +203,6 @@ IRMethod >> generateBlock: trailer withScope: scope [
 		pragmas: pragmas.
 	compiledMethod := irTranslator compiledBlock.
 	^ compiledMethod
-]
-
-{ #category : #testing }
-IRMethod >> hasTempVector: aSymbol [
-	startSequence withAllSuccessorsDo: [ :seq | (seq hasTempVector: aSymbol) ifTrue: [ ^ true ]].
-	^ false
 ]
 
 { #category : #scoping }
@@ -310,7 +304,7 @@ IRMethod >> optimize [
 	
 	"This last two optimizations works but the problem 
 	when you absorb conditional jumps 
-	is that and: / or: chained generate explicitely 
+	is that and: / or: chained generate explicitly 
 	constant conditional jumps to tip the JIt and the 
 	decompiler that they are and: or: and not conditions/loops
 	
@@ -343,11 +337,6 @@ IRMethod >> removeEmptyStart [
         "startSeq is just unconditional jump, forget it"
         startSequence := startSequence last destination].
 
-]
-
-{ #category : #inlining }
-IRMethod >> removeReturn [
-	self allSequences last removeLast.
 ]
 
 { #category : #accessing }
@@ -399,6 +388,5 @@ IRMethod >> tempMap [
 
 { #category : #enumerating }
 IRMethod >> tempVectorNamed: aName [
-	
-	^self firstInstructionMatching: [:ir | ir isTempVector and:  [ir name = aName ] ]
+	^startSequence tempVectorNamed: aName
 ]

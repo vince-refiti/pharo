@@ -193,7 +193,7 @@ ZipFileMember >> uncompressDataTo: aStream [
 		| chunkSize |
 		chunkSize := 32768 min: readDataRemaining.
 		buffer := decoder next: chunkSize into: buffer startingAt: 1.
-		aStream next: chunkSize putAll: buffer startingAt: 1.
+		aStream next: (chunkSize min: buffer size) putAll: buffer startingAt: 1.
 		readDataRemaining := readDataRemaining - chunkSize.
 	]] on: CRCError do: [ :ex | crcErrorMessage := ex messageText. ex resume ].
 
@@ -230,7 +230,7 @@ ZipFileMember >> unzipTimestamp: dosTimestampInteger [
 ]
 
 { #category : #testing }
-ZipFileMember >> usesFileNamed: aFileName [
+ZipFileMember >> usesFile: aFileReferenceOrFileName [
 	"Do I require aFileName? That is, do I care if it's clobbered?"
-	^ externalFileName asFileReference = aFileName asFileReference
+	^ externalFileName asFileReference = aFileReferenceOrFileName asFileReference
 ]

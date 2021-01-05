@@ -3,13 +3,12 @@ Superclass for serialization tests
 "
 Class {
 	#name : #FLSerializationTest,
-	#superclass : #TestCase,
+	#superclass : #AbstractEnvironmentTestCase,
 	#instVars : [
 		'serializer',
 		'materializer',
 		'classFactory',
-		'streamFactory',
-		'traits'
+		'streamFactory'
 	],
 	#category : #'Fuel-Tests-Core-Base'
 }
@@ -57,11 +56,6 @@ FLSerializationTest >> assertSerializationIdentityOf: anObject [
 { #category : #accessing }
 FLSerializationTest >> classFactory [
 	^classFactory
-]
-
-{ #category : #'traits-factory' }
-FLSerializationTest >> cleanUpTraits [
-	self traits do: [ :aTrait | self removeFromSystem: aTrait ]
 ]
 
 { #category : #cleaning }
@@ -133,25 +127,18 @@ FLSerializationTest >> newSubclassOf: aClass  instanceVariableNames: ivNamesStri
 ]
 
 { #category : #'traits-factory' }
-FLSerializationTest >> newTraitNamed: traitName inCategory: aCategory [
-
-	^ Trait 
-		named: traitName asSymbol
+FLSerializationTest >> newTraitSuffixed: suffix [
+	^ self classFactory
+		newTraitNamed: (self traitNamePrefix, suffix) asSymbol
 		uses: Array new 
-		category: aCategory asSymbol
+		tag: (self classFactory packageName, '-', self classFactory defaultTagPostfix) asSymbol
 ]
 
 { #category : #'traits-factory' }
-FLSerializationTest >> newTraitSuffixed: suffix [
-
-	| trait |
-	trait := Trait 
-		named: (self traitNamePrefix, suffix) asSymbol
-		uses: Array new 
-		category: (self classFactory packageName, '-', self classFactory defaultCategoryPostfix) asSymbol.
-	self traits add: trait.
-	
-	^ trait
+FLSerializationTest >> registerBehavior: aBehavior [
+	aBehavior isTrait
+		ifTrue: [ self classFactory createdTraits add: aBehavior ]
+		ifFalse: [ self classFactory createdClasses add: aBehavior ]
 ]
 
 { #category : #cleaning }
@@ -164,6 +151,7 @@ FLSerializationTest >> resultOfSerializeAndMaterialize: anObject [
 
 	self serialize: anObject.
 	^ self materialized
+
 ]
 
 { #category : #running }
@@ -222,13 +210,18 @@ FLSerializationTest >> setUp [
 	self setUpSerializer.
 	self setUpMaterializer.
 	"You have several stream strategies available on 'stream-strategies' category."
-	self useMemoryStream.
+	self useFileReferenceStream.
 
+	"When rerunning tests from the test runner #initialize
+	will not be sent to the instance but the previous run will
+	have torn down the variable"
+	testingEnvironment ifNil: [ 
+		testingEnvironment := Smalltalk globals ]
 ]
 
 { #category : #running }
 FLSerializationTest >> setUpClassFactory [
-	classFactory := ClassFactoryForTestCase new
+	classFactory := FLPlatform current classFactoryForTestCaseClass new
 
 ]
 
@@ -249,14 +242,12 @@ FLSerializationTest >> streamFactory [
 
 { #category : #running }
 FLSerializationTest >> tearDown [
-	
-	"Traits should be cleaned before classFactory because it seems class factory only knwos how to clean classes, not traits."
-	self tearDownTraits.
-	self tearDownClassFactory.
-	self tearDownGlobalVariables.
+	self
+		tearDownClassFactory;
+		tearDownGlobalVariables.
 	self streamFactory tearDown.
-	self tearDownInstanceVariables.
-	super tearDown.
+	
+	super tearDown
 ]
 
 { #category : #running }
@@ -266,24 +257,9 @@ FLSerializationTest >> tearDownClassFactory [
 
 { #category : #running }
 FLSerializationTest >> tearDownGlobalVariables [
-
-	Smalltalk globals removeKey: #FLGlobalVariableForTesting ifAbsent: []
-]
-
-{ #category : #running }
-FLSerializationTest >> tearDownInstanceVariables [
-	self class withAllSuperclasses do: [ :class |
-		class = TestCase ifTrue: [ ^ self ].
-		
-		class instVarNames do: [ :varName |
-			self 
-				instVarNamed: varName
-				put: nil ] ]
-]
-
-{ #category : #running }
-FLSerializationTest >> tearDownTraits [
-	self cleanUpTraits
+	testingEnvironment
+		removeKey: #FLGlobalVariableForTesting
+		ifAbsent: []
 ]
 
 { #category : #'traits-factory' }
@@ -291,45 +267,28 @@ FLSerializationTest >> traitNamePrefix [
 	^'FLTraitForTesting'
 ]
 
-{ #category : #accessing }
-FLSerializationTest >> traits [	
-	^ traits ifNil: [ traits := OrderedCollection new ]
-]
-
 { #category : #'stream-strategies' }
 FLSerializationTest >> useBinaryFileStream [
 
-	streamFactory := FLFileStreamStrategy newWithBinaryFileStream
+	streamFactory := FLBinaryFileStreamStrategy new
+]
+
+{ #category : #'stream-strategies' }
+FLSerializationTest >> useByteArrayStream [ 
+	"This is a special factory to test what we offer with FLSerializer class >> #serializeInMemory:  and  FLMaterializer class >> #materializeFromByteArray: "
+	streamFactory := FLByteArrayStreamStrategy new
+]
+
+{ #category : #'stream-strategies' }
+FLSerializationTest >> useFileReferenceStream [
+
+	streamFactory := FLFileReferenceStreamStrategy new
 ]
 
 { #category : #'stream-strategies' }
 FLSerializationTest >> useGzipInMemoryStream [
 
 	streamFactory := FLGZipStrategy newWithTarget: FLByteArrayStreamStrategy new
-]
-
-{ #category : #'stream-strategies' }
-FLSerializationTest >> useInMemorySerializationStream [ 
-	"This is a special factory to test what we offer with FLSerializer class >> #serializeInMemory:  and  FLMaterializer class >> #materializeFromByteArray: "
-	streamFactory := FLByteArrayStreamStrategy new
-]
-
-{ #category : #'stream-strategies' }
-FLSerializationTest >> useMemoryStream [
-
-	streamFactory := FLMultiByteStreamStrategy new
-]
-
-{ #category : #'stream-strategies' }
-FLSerializationTest >> useMultiByteFileStream [
-
-	streamFactory := FLFileStreamStrategy newWithMultiByteFileStream
-]
-
-{ #category : #'stream-strategies' }
-FLSerializationTest >> useStandardFileStream [
-
-	streamFactory := FLFileStreamStrategy newWithStandardFileStream
 ]
 
 { #category : #'class-factory' }

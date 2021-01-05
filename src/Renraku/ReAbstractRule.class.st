@@ -8,9 +8,6 @@ RenrakuRuleHelp readInHelpBrowser
 Class {
 	#name : #ReAbstractRule,
 	#superclass : #Object,
-	#instVars : [
-		'one'
-	],
 	#classInstVars : [
 		'enabled'
 	],
@@ -120,8 +117,8 @@ ReAbstractRule >> asRBRule [
 
 { #category : #running }
 ReAbstractRule >> basicCheck: anEntity [
-
-	^ self subclassResponsibility 
+	"If you end here, you should most likely implement this in a subclass"
+	^ self shouldBeImplemented  
 ]
 
 { #category : #running }
@@ -161,6 +158,17 @@ ReAbstractRule >> check: anEntity ifNoCritiques: alternativeBlock [
 	critiques := OrderedCollection new.
 	self check: anEntity forCritiquesDo: [ :critique | critiques add: critique ] ifNone: alternativeBlock.
 	^ critiques
+]
+
+{ #category : #'as yet unclassified' }
+ReAbstractRule >> createTrivialCritiqueOn: method intervalOf: node hint: hint [
+	^ ReTrivialCritique
+		  withAnchor:
+		  (ReIntervalSourceAnchor
+			   entity: method
+			   interval: node sourceInterval)
+		  by: self
+		  hint: hint
 ]
 
 { #category : #helpers }

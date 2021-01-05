@@ -71,8 +71,10 @@ DialogItemsChooserUI class >> dialogItemsChooserSettingsOn: aBuilder [
 		description: 'Settings related to the Dialog Window for choosing elements among a list';
 			with: [
 				(aBuilder setting: #alreadySearchedUnselectedItemsListMaxSize)
+					default: 15;
 					label: 'Number of the Unselected Items in History'.
 				(aBuilder setting: #alreadySearchedSelectedItemsListMaxSize)
+					default: 15;
 					label: 'Number of the Selected Items in History']
 ]
 
@@ -340,8 +342,8 @@ DialogItemsChooserUI >> cancelButtonState [
 
 { #category : #display }
 DialogItemsChooserUI >> centering [
-	self left: ((World width / 2) - (self width /2)) rounded.
-	self top: ((World height / 2) - (self height /2)) rounded
+	self left: ((self currentWorld width / 2) - (self width /2)) rounded.
+	self top: ((self currentWorld height / 2) - (self height /2)) rounded
 ]
 
 { #category : #accessing }
@@ -570,7 +572,7 @@ DialogItemsChooserUI >> selectedItemsProbablyRestricted [
 						(string last = $*) 
 							ifTrue: [string]
 							ifFalse:[string, '*']].
-	^self selectedItems select: [:each | matcher match: each].
+	^self selectedItems select: [:each | matcher asString match: each].
 ]
 
 { #category : #accessing }
@@ -606,9 +608,10 @@ DialogItemsChooserUI >> selectedItemsTextArea: anObject [
 
 { #category : #accessing }
 DialogItemsChooserUI >> selectedLabel [
-	^self dialogItemsChooser isNil
-		ifTrue: ['Selected Items' translated]
-		ifFalse: [self dialogItemsChooser selectedLabel]
+
+	^ self dialogItemsChooser
+		ifNil: [ 'Selected Items' translated ]
+		ifNotNil: [ self dialogItemsChooser selectedLabel ]
 ]
 
 { #category : #selectedList }
@@ -718,9 +721,10 @@ DialogItemsChooserUI >> unselectedItemsTextArea: anObject [
 
 { #category : #accessing }
 DialogItemsChooserUI >> unselectedLabel [
-	^self dialogItemsChooser isNil
-		ifTrue: ['Unselected Items' translated]
-		ifFalse: [self dialogItemsChooser unselectedLabel]
+
+	^ self dialogItemsChooser
+		ifNil: [ 'Unselected Items' translated ]
+		ifNotNil: [ self dialogItemsChooser unselectedLabel ]
 ]
 
 { #category : #accessing }

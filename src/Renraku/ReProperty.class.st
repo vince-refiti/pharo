@@ -22,15 +22,9 @@ ReProperty >> color [
 	^ Color black alpha: 0.1
 ]
 
-{ #category : #actions }
-ReProperty >> gtInspectorActions [
-	^ (self actions collect: [ :act | 
-		GLMGenericAction new
-			action: [ act actOnCritic: self ofEntity: self sourceAnchor entity ];
-		icon: act icon;
-		title: act description;
-		yourself ]),
-	super gtInspectorActions
+{ #category : #accessing }
+ReProperty >> entity [
+	^ self sourceAnchor entity
 ]
 
 { #category : #accessing }

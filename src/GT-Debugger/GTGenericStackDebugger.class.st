@@ -9,7 +9,6 @@ Class {
 		'cache'
 	],
 	#classVars : [
-		'AlwaysOpenFullDebugger',
 		'ErrorRecursion',
 		'FilterCommonMessageSends',
 		'LogDebuggerStackToFile',
@@ -18,23 +17,12 @@ Class {
 	#category : #'GT-Debugger-UI'
 }
 
-{ #category : #'settings api' }
-GTGenericStackDebugger class >> alwaysOpenFullDebugger [
-	^ AlwaysOpenFullDebugger ifNil: [AlwaysOpenFullDebugger := false]
-]
-
-{ #category : #'settings api' }
-GTGenericStackDebugger class >> alwaysOpenFullDebugger: aBoolean [
-	AlwaysOpenFullDebugger := aBoolean.
-]
-
 { #category : #'utilities api' }
 GTGenericStackDebugger class >> closeAllDebuggers [
 	"GTGenericStackDebugger closeAllDebuggers"
-	(SystemWindow allSubInstances select: [:w | 
-		 w model isKindOf: GTGenericStackDebugger])
-			do: [:w | w delete ].
-	GTSpecPreDebugWindow allInstances do: #delete.
+
+	(SystemWindow allSubInstances select: [ :w | w model isKindOf: GTGenericStackDebugger ]) do: [ :w | w delete ].
+	GTSpecPreDebugPresenter allInstances do: #close
 ]
 
 { #category : #'settings api' }
@@ -368,12 +356,11 @@ GTGenericStackDebugger >> openWithNotification: notificationString [
 	"NOTE: When this method returns, a new process has been scheduled to
 	run the windows, and thus this notifier, but the previous active porcess
 	has not been suspended. The sender will do this."
-	
-	GTSpecPreDebugWindow new 
-		setTitle: self title;
+
+	(GTSpecPreDebugPresenter on: self)
 		message: notificationString;
 		openWithSpec;
-		debugger: self
+		setTitle: self title
 ]
 
 { #category : #'printing/formatting' }
@@ -502,7 +489,8 @@ GTGenericStackDebugger >> setDebuggerToFirstNonFilteredContext [
 	| selection |
 	selection := self stackPresentation selection.
 	(selection isNil or: [ selection method hasPragmaNamed: #debuggerCompleteToSender ])
-		ifTrue: [ self stackPresentation selection: self filteredStack first ]
+		ifTrue: [
+			  self filteredStack ifNotEmpty: [ :stack | self stackPresentation selection: stack first ]]
 ]
 
 { #category : #accessing }
@@ -548,18 +536,18 @@ GTGenericStackDebugger >> stackWidgetIn: composite [
 		hideHeader
 ]
 
-{ #category : #'old api' }
-GTGenericStackDebugger >> sugsContext [
-	^SugsDebuggerContext model: self
-]
-
 { #category : #'printing/formatting' }
 GTGenericStackDebugger >> textAttributesForStackEntry: aContext [
 
 	(self selectedContext isNil or: self class enableStackColoring not) 
-		ifTrue: [ ^ {TextColor color: Smalltalk ui theme textColor} ].
+		ifTrue: [ ^ {TextColor color: self theme textColor} ].
 
-	^ Smalltalk ui theme styleContext: aContext from: self.
+	^ self theme styleContext: aContext from: self.
+]
+
+{ #category : #'printing/formatting' }
+GTGenericStackDebugger >> theme [ 
+	^ Smalltalk ui theme
 ]
 
 { #category : #building }

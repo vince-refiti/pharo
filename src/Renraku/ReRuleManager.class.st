@@ -13,9 +13,8 @@ Class {
 		'rules'
 	],
 	#classInstVars : [
-		'uniqueInstance',
-		'managers',
-		'default'
+		'default',
+		'managers'
 	],
 	#category : #'Renraku-Utility'
 }
@@ -70,8 +69,8 @@ ReRuleManager class >> defaultRules [
 
 { #category : #helpers }
 ReRuleManager class >> excludedRuleNames [
-
-	^ #(RBImplementedNotSentRule)
+	"here rules can be excluded, but it is better to implement #enabled on the rule to return false to disable it. Do not forget to call #reset on this class after changing this method!"
+	^ #()
 ]
 
 { #category : #'class initialization' }
@@ -135,7 +134,7 @@ ReRuleManager class >> removeManagerFor: anRPackage [
 	
 ]
 
-{ #category : #utilities }
+{ #category : #initialization }
 ReRuleManager class >> reset [
 	<script>
 	managers := nil.
@@ -172,6 +171,7 @@ ReRuleManager class >> ruleToggleSettingsOn: aBuilder [
 					(aBuilder setting: rule enabledSettingID)
 					selector: #enabled;
 					target: rule;
+					default: true;
 					label: inst name;
 					description: inst rationale ] ]
 ]

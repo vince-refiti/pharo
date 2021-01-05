@@ -22,11 +22,19 @@ RBRefersToClassRule class >> uniqueIdentifierName [
 
 { #category : #running }
 RBRefersToClassRule >> check: aMethod forCritiquesDo: aCriticBlock [
-	| class |
-	class := aMethod methodClass instanceSide.
-	(aMethod hasLiteral: (class environment associationAt: class name ifAbsent: [ ^ self ])) ifTrue: [ 
-		aCriticBlock cull: (self critiqueFor: aMethod) ]
+	| class problemLiterals |
 	
+	"The class method #isAbstract needs to explicitly hardcode class references. 
+	So we do not criticize this."
+	(aMethod methodClass isClassSide and: [ aMethod selector = #isAbstract ]) ifTrue: [ ^ self ].
+	
+	class := aMethod methodClass instanceSide.
+	problemLiterals := (aMethod ast allChildren 
+			select: [ :node | node isVariable and:[ node isGlobal ] ])
+			select: [ :var | var name = class name].
+		
+	problemLiterals do: [ :literal |
+			aCriticBlock cull: (self createTrivialCritiqueOn: aMethod intervalOf: literal hint:literal name )]
 ]
 
 { #category : #accessing }

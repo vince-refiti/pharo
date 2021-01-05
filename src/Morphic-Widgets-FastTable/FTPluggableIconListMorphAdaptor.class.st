@@ -404,9 +404,10 @@ FTPluggableIconListMorphAdaptor >> resetListSelector: aSelector [
 ]
 
 { #category : #accessing }
-FTPluggableIconListMorphAdaptor >> scrollValue [ 
-	self flag: #todo. "x is always zero because horizontal scroll bar is not yet implemented"
-	^ 0@(self verticalScrollBar value)
+FTPluggableIconListMorphAdaptor >> scrollValue [
+	"x is always zero because horizontal scroll bar is not yet implemented"
+
+	^ 0 @ self verticalScrollBar value
 ]
 
 { #category : #ignored }
@@ -423,8 +424,8 @@ FTPluggableIconListMorphAdaptor >> selectionChanged: ann [
 
 { #category : #private }
 FTPluggableIconListMorphAdaptor >> selectionChangedResetIfEmpty: ann [
-	self resetListSelector  ifNil: [ ^ self ].
-	ann newSelectedRowIndexes ifNotEmpty: [ ^ self ].
+	self resetListSelector ifNil: [ ^ self ].
+	ann newSelectedIndexes ifNotEmpty: [ ^ self ].
 
 	self model perform: self resetListSelector
 ]
@@ -433,30 +434,18 @@ FTPluggableIconListMorphAdaptor >> selectionChangedResetIfEmpty: ann [
 FTPluggableIconListMorphAdaptor >> selectionChangedUpdateIndex: ann [
 	self setIndexSelector ifNil: [ ^ self ].
 
-	self model
-		perform: self setIndexSelector
-		with: (ann newSelectedRowIndexes 
-			ifNotEmpty: [ :indexes | indexes first ]
-			ifEmpty: [ 0 ])
+	self model perform: self setIndexSelector with: (ann newSelectedIndexes ifNotEmpty: [ :indexes | indexes first ] ifEmpty: [ 0 ])
 ]
 
 { #category : #private }
 FTPluggableIconListMorphAdaptor >> selectionChangedUpdateStatus: ann [
 	"Updates the status of selection (informs new selections and deselections)"
-	self setSelectionListSelector ifNil: [ ^ self ].	
-	
-	ann oldSelectedRowIndexes do: [ :each | 
-		self model 
-			perform: self setSelectionListSelector 
-			with: each
-			with: false ].
-	
-	ann newSelectedRowIndexes do: [ :each | 
-		self model 
-			perform: self setSelectionListSelector 
-			with: each
-			with: true ].
 
+	self setSelectionListSelector ifNil: [ ^ self ].
+
+	ann oldSelectedIndexes do: [ :each | self model perform: self setSelectionListSelector with: each with: false ].
+
+	ann newSelectedIndexes do: [ :each | self model perform: self setSelectionListSelector with: each with: true ]
 ]
 
 { #category : #'accessing selectors' }

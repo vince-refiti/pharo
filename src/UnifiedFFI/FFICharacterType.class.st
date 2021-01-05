@@ -23,6 +23,18 @@ FFICharacterType class >> externalTypeSize [
 	^ 1
 ]
 
+{ #category : #'emitting code' }
+FFICharacterType >> basicEmitArgument: aBuilder context: aContext inCallout: aCallout [
+
+	| isString |
+	isString := self pointerArity = 1.
+	isString
+		ifTrue: [
+			aCallout stringEncodingStrategy
+				emitIRForFunctionArgument: self inIRBuilder: aBuilder context: aContext ]
+		ifFalse: [ super basicEmitArgument: aBuilder context: aContext inCallout: aCallout ]
+]
+
 { #category : #private }
 FFICharacterType >> basicHandle: aHandle at: index [
 	^ aHandle signedCharAt: index
@@ -33,10 +45,22 @@ FFICharacterType >> basicHandle: aHandle at: index put: value [
 	^ aHandle signedCharAt: index put: value
 ]
 
-{ #category : #acccessing }
+{ #category : #accessing }
 FFICharacterType >> defaultReturnOnError [
 
 	^ Character null
+]
+
+{ #category : #'emitting code' }
+FFICharacterType >> emitReturn: aBuilder resultTempVar: resultVar context: aContext inCallout: aCallout [
+
+	| isString |
+	isString := self pointerArity = 1.
+	^ isString
+		ifTrue: [
+			aCallout stringEncodingStrategy
+				emitIRForFunctionReturn: self inIRBuilder: aBuilder context: aContext ]
+		ifFalse: [ super emitReturn: aBuilder resultTempVar: resultVar context: aContext inCallout: aCallout ]
 ]
 
 { #category : #callbacks }

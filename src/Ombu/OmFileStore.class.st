@@ -10,7 +10,6 @@ Class {
 		'fileReference',
 		'entryPositionsByLocalName',
 		'entryCount',
-		'entryReader',
 		'writingDeferrer',
 		'entryByLocalName',
 		'mustRefresh',
@@ -228,8 +227,12 @@ OmFileStore >> flushEntryBuffer [
 	self critical: [
 		| initialPosition initialLocalName fileStream |
 		self entryBuffer isEmpty ifTrue: [ ^self ].
-		
-		fileStream := ZnCharacterReadWriteStream on: fileReference binaryReadWriteStream encoding: #utf8.
+				
+		[ fileStream := ZnCharacterWriteStream on: fileReference binaryWriteStream encoding: #utf8. ] on: ReadOnlyFileException do: [ :anException |
+			fileStream close.
+			^ self
+		 ].	
+	
 		[ | anEntryWriter |
 			fileStream setToEnd.
 			
@@ -248,14 +251,13 @@ OmFileStore >> flushEntryBuffer [
 					nextEntryPut: entry.
 				].
 
-			"In Linux it was necessary to explicitely flush the file stream"
+			"In Linux it was necessary to explicitly flush the file stream"
 			fileStream flush.
 			
-			lastStreamPosition := fileStream size.
+			lastStreamPosition := fileStream position.
 			] ensure: [ fileStream close ].
 	
-		self refreshEntryPositionsByLocalNameStartingAt: initialPosition since: initialLocalName.
-		].
+		self refreshEntryPositionsByLocalNameStartingAt: initialPosition since: initialLocalName ].
 
 ]
 

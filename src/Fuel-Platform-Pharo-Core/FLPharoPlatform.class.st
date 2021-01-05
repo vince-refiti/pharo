@@ -1,41 +1,32 @@
 Class {
 	#name : #FLPharoPlatform,
 	#superclass : #FLPlatform,
-	#category : 'Fuel-Platform-Pharo-Core'
+	#category : #'Fuel-Platform-Pharo-Core'
 }
 
-{ #category : #testing }
-FLPharoPlatform class >> addNativeBoostComponents [
-	Smalltalk
-		at: #NBExternalHandle
-		ifPresent: [ :handle | ^ self ].
-		
-	Object variableByteSubclass: #NBExternalHandle
-		instanceVariableNames: ''
-		classVariableNames: ''
-		category: self hacksCategoryName
-]
+{ #category : #'private-extensions-znbufferedreadstream' }
+FLPharoPlatform class >> fuelNextWordsInto: aWordObject [
+	<flExtensionOf: #ZnBufferedReadStream>
+	"This method is the same as nextWordsInto: but the restoreEndianness is only done if needed"
+	| byteSize source pos blt |
+	byteSize := aWordObject byteSize.
+	source := self next: byteSize.
+	pos := 0.
 
-{ #category : #testing }
-FLPharoPlatform class >> addPackageManifest [
-	Smalltalk
-		at: #PackageManifest
-		ifPresent: [ ^ self ].
+	"Now use BitBlt to copy the bytes to the bitmap."
+	blt := (BitBlt
+				toForm: (Form new hackBits: aWordObject))
+				sourceForm: (Form new hackBits: source).
+	blt combinationRule: Form over. "store"
+	blt sourceX: 0;
+		 sourceY: pos // 4;
+		 height: byteSize // 4;
+		 width: 4.
+	blt destX: 0;
+		 destY: 0.
+	blt copyBits.
 	
-	Object subclass: #PackageManifest
-		instanceVariableNames: ''
-		classVariableNames: ''
-		poolDictionaries: ''
-		category: self hacksCategoryName
-]
-
-{ #category : #'private-hacks' }
-FLPharoPlatform class >> basicAddHacks [
-	super basicAddHacks.
-	
-	self
-		addNativeBoostComponents;
-		addPackageManifest
+	^ aWordObject
 ]
 
 { #category : #testing }
@@ -46,6 +37,12 @@ FLPharoPlatform class >> isResponsibleForCurrentPlatform [
 { #category : #'accessing-system' }
 FLPharoPlatform >> absolutePathOf: aString [
 	^ aString asFileReference fullName
+]
+
+{ #category : #'accessing-compiler' }
+FLPharoPlatform >> addAndClassifySelector: aSymbol inClass: aClass withMethod: aCompiledMethod inProtocol: aString [
+
+	aClass addAndClassifySelector: aSymbol withMethod: aCompiledMethod inProtocol: aString
 ]
 
 { #category : #'accessing-system' }
@@ -71,6 +68,11 @@ FLPharoPlatform >> renamedMethodCopyOf: aMethod selector: aSymbol [
 		yourself.
 	"#compiledMethod answers a new instance"
 	^ newMethod compiledMethod
+]
+
+{ #category : #'accessing-tests' }
+FLPharoPlatform >> setTestTimeLimitFor: aTest to: aDuration [
+	aTest timeLimit: aDuration
 ]
 
 { #category : #'accessing-system' }

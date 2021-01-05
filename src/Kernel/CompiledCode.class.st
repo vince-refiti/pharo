@@ -73,12 +73,7 @@ CompiledCode >> = aCompiledMethod [
 
 { #category : #scanning }
 CompiledCode >> accessesSlot: aSlot [
-	self ast nodesDo: [ :node | 
-		node isVariable and: [
-			node isInstance and: [ 
-				(node binding slot ==  aSlot)
-					 ifTrue: [^true]]]]. 
-	^false
+	^aSlot isAccessedIn: self
 	
 ]
 
@@ -95,10 +90,7 @@ CompiledCode >> allLiterals [
 
 { #category : #'source code management' }
 CompiledCode >> argumentNames [
-	^self 
-		propertyAt: #argumentNames 
-		ifAbsent: [ self ast argumentNames ]
-
+	^ self propertyAt: #argumentNames ifAbsent: [ self ast argumentNames ]
 ]
 
 { #category : #converting }
@@ -264,6 +256,11 @@ CompiledCode >> hasLiteralThorough: literal [
 	^ false 
 ]
 
+{ #category : #accessing }
+CompiledCode >> hasPragmaNamed: arg1 [ 
+	^ self subclassResponsibility
+]
+
 { #category : #literals }
 CompiledCode >> hasSelector: selector [ 
 	"Answers true if the method refers to the selector"
@@ -280,6 +277,11 @@ CompiledCode >> hasSelector: selector specialSelectorIndex: specialOrNil [
 	^ specialOrNil 
 		ifNil: [ false ] 
 		ifNotNil: [ self scanFor: self encoderClass firstSpecialSelectorByte + specialOrNil ]
+]
+
+{ #category : #accessing }
+CompiledCode >> hasSourceCode [
+	^ self subclassResponsibility
 ]
 
 { #category : #comparing }
@@ -378,6 +380,16 @@ CompiledCode >> isCollection [
 ]
 
 { #category : #testing }
+CompiledCode >> isCompiledBlock [
+	^ false
+]
+
+{ #category : #testing }
+CompiledCode >> isDoIt [
+	^ false
+]
+
+{ #category : #testing }
 CompiledCode >> isExternalCallPrimitive [
 	^self primitive = 120
 ]
@@ -402,6 +414,11 @@ CompiledCode >> isQuick [
 { #category : #testing }
 CompiledCode >> isRealPrimitive [
 	^self isPrimitive and: [ self isQuick not ]
+]
+
+{ #category : #accessing }
+CompiledCode >> isTestMethod [
+	^ self subclassResponsibility
 ]
 
 { #category : #literals }
@@ -441,7 +458,7 @@ CompiledCode >> literals [
 	"Answer an Array of the literals referenced by the receiver.	
 	 Exclude superclass + selector/properties"
 	| literals numberLiterals |
-	literals := Array new: (numberLiterals := self numLiterals - 2).
+	literals := Array new: (numberLiterals := self numLiterals - self numberOfReservedLiterals).
 	1 to: numberLiterals do: [:index |
 		literals at: index put: (self objectAt: index + 1)].
 	^literals
@@ -509,7 +526,22 @@ CompiledCode >> longPrintOn: aStream [
 
 ]
 
-{ #category : #'initialize-release' }
+{ #category : #accessing }
+CompiledCode >> method [
+	^ self subclassResponsibility
+]
+
+{ #category : #accessing }
+CompiledCode >> methodClass [
+	self subclassResponsibility
+]
+
+{ #category : #accessing }
+CompiledCode >> methodNode [
+	^ self subclassResponsibility
+]
+
+{ #category : #initialization }
 CompiledCode >> needsFrameSize: newFrameSize [
 	"Set the largeFrameBit to accomodate the newFrameSize"
 	(self numTemps + newFrameSize) > LargeFrame ifTrue:
@@ -538,6 +570,12 @@ CompiledCode >> numTemps [
 	^ (self header bitShift: -18) bitAnd: 16r3F
 ]
 
+{ #category : #accessing }
+CompiledCode >> numberOfReservedLiterals [
+
+	^ self subclassResponsibility
+]
+
 { #category : #literals }
 CompiledCode >> objectAt: index [ 
 	"Primitive. Answer the method header (if index=1) or a literal (if index 
@@ -561,16 +599,41 @@ CompiledCode >> objectAt: index put: value [
 	self primitiveFailed
 ]
 
+{ #category : #accessing }
+CompiledCode >> penultimateLiteral [
+	^ self subclassResponsibility
+]
+
+{ #category : #accessing }
+CompiledCode >> pragmas [
+	^ self subclassResponsibility
+]
+
+{ #category : #accessing }
+CompiledCode >> primitive [
+	^ self subclassResponsibility
+]
+
 { #category : #printing }
 CompiledCode >> primitiveErrorVariableName [
 	"Answer the primitive error code temp name, or nil if none."
 	self isPrimitive ifTrue:
 		[self pragmas do:
 			[:pragma| | kwds ecIndex |
-			((kwds := pragma keyword keywords) first = 'primitive:'
+			((kwds := pragma selector keywords) first = 'primitive:'
 			and: [(ecIndex := kwds indexOf: 'error:') > 0]) ifTrue:
 				[^pragma argumentAt: ecIndex]]].
 	^nil
+]
+
+{ #category : #accessing }
+CompiledCode >> properties [
+	^ self subclassResponsibility
+]
+
+{ #category : #accessing }
+CompiledCode >> propertyAt: aString ifAbsent: aFullBlockClosure [
+	^ aFullBlockClosure value
 ]
 
 { #category : #scanning }
@@ -591,12 +654,7 @@ CompiledCode >> readsRef: literalAssociation [
 
 { #category : #scanning }
 CompiledCode >> readsSlot: aSlot [
-	| nodes |
-	nodes := self ast allChildren.
-	nodes := nodes select: #isVariable.
-	nodes := nodes select: #isInstance.
-	nodes := nodes reject: [ :node | node parent isAssignment and: [ node parent variable = node ] ].
-	^ nodes anySatisfy: [ :node | node binding slot == aSlot ]
+	^aSlot isReadIn: self
 ]
 
 { #category : #accessing }
@@ -682,6 +740,11 @@ CompiledCode >> scanner [
 	^ InstructionStream on: self
 ]
 
+{ #category : #accessing }
+CompiledCode >> selector [
+	^ self subclassResponsibility
+]
+
 { #category : #testing }
 CompiledCode >> sendsAnySelectorOf: aCollection [
 	
@@ -702,7 +765,7 @@ CompiledCode >> sendsToSuper [
 	^ self innerCompiledBlocksAnySatisfy: [ :cb | cb sendsToSuper ]
 ]
 
-{ #category : #'initialize-release' }
+{ #category : #initialization }
 CompiledCode >> setFrameBit: boolean [ 
 	"true for large frame, else false"
 	| largeFrameBit newHeader |
@@ -727,6 +790,26 @@ CompiledCode >> signFlag [
 	 used by the VM to select an alternate bytecode set."
 
 	^ self header < 0
+]
+
+{ #category : #accessing }
+CompiledCode >> sourceCode [
+	^ self subclassResponsibility
+]
+
+{ #category : #accessing }
+CompiledCode >> sourceNode [
+	^ self subclassResponsibility
+]
+
+{ #category : #accessing }
+CompiledCode >> sourceNodeExecutedForPC: arg1 [ 
+	^ self subclassResponsibility
+]
+
+{ #category : #accessing }
+CompiledCode >> sourceNodeForPC: arg1 [ 
+	^ self subclassResponsibility
 ]
 
 { #category : #'source code management' }
@@ -804,12 +887,5 @@ CompiledCode >> writesRef: literalAssociation [
 
 { #category : #scanning }
 CompiledCode >> writesSlot: aSlot [
-	self ast nodesDo: [ :node | 
-		node isVariable and: [
-			node parent isAssignment and: [  
-				(node parent variable = node) and: [  
-					node isInstance and: [
-						(node binding slot ==  aSlot)
-					 		ifTrue: [^true]]]]]]. 
-	^false
+	^aSlot isWrittenIn: self
 ]

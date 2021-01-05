@@ -143,7 +143,7 @@ FileSystemDirectoryEntry >> gid [
 	^FileAttributeNotSupported signalWith: self
 ]
 
-{ #category : #'initialize-release' }
+{ #category : #initialization }
 FileSystemDirectoryEntry >> initializeWithReference: ref [ 
 
 	super initialize.	
@@ -190,6 +190,13 @@ FileSystemDirectoryEntry >> isFIFO [
 
 { #category : #testing }
 FileSystemDirectoryEntry >> isFile [
+
+	^false
+]
+
+{ #category : #testing }
+FileSystemDirectoryEntry >> isHidden [
+	"Return whether the receiver is hidden"
 
 	^false
 ]

@@ -75,17 +75,10 @@ CairoBackendCache >> for: anObject at: key ifAbsentPut: aBlock [
 	^ subCache at: key ifAbsentPut: aBlock
 ]
 
-{ #category : #'initialize-release' }
+{ #category : #initialization }
 CairoBackendCache >> initialize [
 
 	self flush
-]
-
-{ #category : #removeMe }
-CairoBackendCache >> nbSessionChanged [
-
-	self initialize.
-	
 ]
 
 { #category : #removing }

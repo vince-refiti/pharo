@@ -14,6 +14,19 @@ YearTest >> classToBeTested [
 ]
 
 { #category : #tests }
+YearTest >> testFirstThursday [
+		
+	1800 to: 2000 do:
+		[ :y |
+			| firstThursday |
+			firstThursday := (Year year: y) firstThursday.
+			self assert: firstThursday dayOfWeek equals: 5.
+			self assert: firstThursday year equals: y.
+			self assert: (firstThursday - 1 week) year equals: y - 1 ]
+
+]
+
+{ #category : #tests }
 YearTest >> testOffset [
 	"Check that the offset is maintained when creating a new instance of Month from a DateAndTime"
 
@@ -26,19 +39,17 @@ YearTest >> testOffset [
 
 { #category : #tests }
 YearTest >> testPreviousInLeapYear [
-		
 	| leap |
 	leap := Year year: 2008.
-	self assert: leap isLeapYear. 
-	self assert: (Year year: (leap year - 1)) = leap previous 
+	self assert: leap isLeapYear.
+	self assert: (Year year: leap year - 1) equals: leap previous
 ]
 
 { #category : #tests }
 YearTest >> testStart [
-		
 	| yyyy |
 	yyyy := DateAndTime now year.
-	self assert: Year current start = (DateAndTime year: yyyy month: 1 day: 1)
+	self assert: Year current start equals: (DateAndTime year: yyyy month: 1 day: 1)
 ]
 
 { #category : #tests }

@@ -7,7 +7,7 @@ Class {
 	#category : #'FileSystem-Tests-Core-Visitors'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #testing }
 AbstractEnumerationVisitorTest class >> isAbstract [
 	^ self name = #AbstractEnumerationVisitorTest
 ]
@@ -29,5 +29,5 @@ AbstractEnumerationVisitorTest >> root [
 { #category : #running }
 AbstractEnumerationVisitorTest >> setUp [
 	super setUp.
-	self setUpGreek.
+	self setUpGreek
 ]

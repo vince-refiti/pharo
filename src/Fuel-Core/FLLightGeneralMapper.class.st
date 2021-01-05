@@ -78,6 +78,13 @@ FLLightGeneralMapper >> visitDictionary: aDictionary [
 ]
 
 { #category : #visiting }
+FLLightGeneralMapper >> visitExternalAddress: anObject [
+	self
+		mapAndTraceByObjectClass: anObject
+		to: FLExternalAddressCluster
+]
+
+{ #category : #visiting }
 FLLightGeneralMapper >> visitFixedObject: anObject [
 
 	self mapAndTraceByObjectClass: anObject to: FLFixedObjectCluster
@@ -102,6 +109,13 @@ FLLightGeneralMapper >> visitHookPrimitive: anObject [
 FLLightGeneralMapper >> visitMetaclass: aMetaclass [
 
 	self mapAndTraceByClusterName: aMetaclass to: FLGlobalClassSideCluster
+]
+
+{ #category : #visiting }
+FLLightGeneralMapper >> visitMetaclassForTraits: aMetaclass [
+	self
+		mapAndTraceByClusterName: aMetaclass
+		to: FLGlobalClassSideCluster
 ]
 
 { #category : #visiting }
@@ -168,6 +182,13 @@ FLLightGeneralMapper >> visitSubstitution: anObject by: anotherObject onRecursio
 FLLightGeneralMapper >> visitTrait: aTrait [
 
 	self mapAndTraceInstanceSideGlobal: aTrait
+]
+
+{ #category : #visiting }
+FLLightGeneralMapper >> visitTraitedMetaclass: aMetaclass [
+	self
+		mapAndTraceByClusterName: aMetaclass
+		to: FLGlobalClassSideCluster
 ]
 
 { #category : #visiting }

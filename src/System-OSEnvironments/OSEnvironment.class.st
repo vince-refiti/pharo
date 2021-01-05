@@ -59,7 +59,7 @@ OSEnvironment class >> initialize [
 
 { #category : #testing }
 OSEnvironment class >> isAvailable [
-	self flag: #todo. "Replace this for a check of FFI available"
+	self flag: #pharoTodo. "Replace this for a check of FFI available"
 	self environment at: #FFICalloutAPI ifAbsent: [ ^ false ].
 	^ true
 ]
@@ -208,7 +208,7 @@ OSEnvironment >> includesKey: aKey [
 	^ self at: aKey ifPresent: [ :value | true ] ifAbsent: [ false ].
 ]
 
-{ #category : #'initialize-release' }
+{ #category : #initialization }
 OSEnvironment >> initializeWith: anOSPlatform [
 	super initialize.
 	platform := anOSPlatform

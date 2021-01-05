@@ -11,7 +11,8 @@ Class {
 		'choicesMorph',
 		'choiceMenus',
 		'filter',
-		'filterMorph'
+		'filterMorph',
+		'updatingFilter'
 	],
 	#category : #'Polymorph-Widgets-Windows'
 }
@@ -21,14 +22,14 @@ PopupChoiceDialogWindow class >> chooseFrom: aList lines: lines title: title [
 	"self chooseFrom: #('yes' 'no') lines: #(1 2)  title: 'Foo is the question'"
 	"self chooseFrom: #('yes' 'no') lines: #()  title: 'Foo is the question'"
 	| pd |
-	pd := (self newWithTheme: World theme)
+	pd := (self newWithTheme: self currentWorld theme)
 		title: (title isEmpty ifTrue: ['Choose' translated] ifFalse: [title asString]);
 		labels: aList;
 		lines: (lines ifNil: [#()]);
 		model: aList.
 	"World may be not the best choice because a window may want to be in controlaList 
 	this point should be investigated based on UIManager default modalMorph"
-	^(World openModal: pd) choice
+	^(self currentWorld openModal: pd) choice
 ]
 
 { #category : #'instance creation' }
@@ -134,9 +135,17 @@ PopupChoiceDialogWindow >> filter [
 { #category : #accessing }
 PopupChoiceDialogWindow >> filter: aString [
 	"Set the value of filter, used to match the valid choices."
+	
 
 	filter := aString.
-	self changed: #filter.
+
+	"As this method is called during the update of the list,
+	and the list is updated after filtering it. 
+	We have to ensure that the list is not updating and generating a recursive call"
+	updatingFilter ifFalse: [
+		updatingFilter := true.
+		[ self changed: #filter ]
+	  	ensure: [ updatingFilter := false ] ].
 	self filterMorph ifNil: [^self].
 	(self choiceMenus ifNil: [^self]) do: [:embeddedMenu |
 		embeddedMenu selectItem: nil event: nil]. "clear selection in other menus"
@@ -144,7 +153,7 @@ PopupChoiceDialogWindow >> filter: aString [
 		embeddedMenu selectMatch: self filter asLowercase].
 	self filterMorph hasKeyboardFocus ifFalse: [
 		self activeHand newKeyboardFocus: self filterMorph.
-		self filterMorph selectFrom: filter size + 1 to: filter size + 1]
+		self filterMorph selectFrom: filter size + 1 to: filter size + 1 ]
 ]
 
 { #category : #accessing }
@@ -183,6 +192,7 @@ PopupChoiceDialogWindow >> initialize [
 	"Initialize the receiver."
 
 	super initialize.
+	updatingFilter := false.
 	self
 		labels: #();
 		lines: #();
@@ -320,7 +330,7 @@ PopupChoiceDialogWindow >> newFilterEntry [
 		getEnabled: nil
 		help: 'Filters the options according to a matching substring' translated.
 	entry acceptOnCR: false.
-	entry textMorph crAction: (MessageSend receiver: self selector: #ok).
+	entry crAction: (MessageSend receiver: self selector: #ok).
 	^entry 
 
 ]

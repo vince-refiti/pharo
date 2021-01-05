@@ -1,9 +1,9 @@
 "
-RBVariableNode is an AST node that represent a variable (global, inst var, temp, etc.).
+RBVariableNode is an AST node that represents a variable (global, inst var, temp, etc.).
 
 Although this is the basic class for the concrete variable types, this is not an abstract class and is actually used
 by the parser for all variables that aren't special builtin types like self/super/thisContext. All other variables are
-just RBVariableNodes until the semantic analyser can deduce thte type.
+just RBVariableNodes until the semantic analyser can deduce the type.
 
 Instance Variables:
 	name	<RBValueToken>	the variable's name I represent
@@ -53,8 +53,8 @@ RBVariableNode >> = anObject [
 ]
 
 { #category : #visiting }
-RBVariableNode >> acceptVisitor: aProgramNodeVisitor [ 
-	^aProgramNodeVisitor visitVariableNode: self
+RBVariableNode >> acceptVisitor: aProgramNodeVisitor [
+	^ aProgramNodeVisitor visitVariableNode: self
 ]
 
 { #category : #converting }
@@ -66,14 +66,6 @@ RBVariableNode >> adaptToSemanticNode [
 { #category : #matching }
 RBVariableNode >> copyInContext: aDictionary [ 
 	^ self class named: name.
-]
-
-{ #category : #generation }
-RBVariableNode >> dumpOn: aStream [
-	aStream
-		nextPutAll: self class name;
-		nextPutAll: ' named: '.
-	self name printOn: aStream
 ]
 
 { #category : #comparing }
@@ -103,11 +95,6 @@ RBVariableNode >> initialize [
 { #category : #testing }
 RBVariableNode >> isDefinition [
 	^self parent isSequence and: [ self parent defines: name ]
-]
-
-{ #category : #testing }
-RBVariableNode >> isFaulty [
-	^false
 ]
 
 { #category : #testing }

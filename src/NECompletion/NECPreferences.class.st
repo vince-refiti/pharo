@@ -27,13 +27,18 @@ Class {
 }
 
 { #category : #private }
-NECPreferences class >> availableControllers [
-	^ NECController withAllSubclasses
+NECPreferences class >> availableEngines [
+	^ CompletionEngine withAllSubclasses
 ]
 
 { #category : #accessing }
 NECPreferences class >> availablePopupShortcuts [
 	^ {Character space shift . Character tab asKeyCombination}
+]
+
+{ #category : #private }
+NECPreferences class >> availableSorters [
+	^ CompletionSorter subclasses
 ]
 
 { #category : #accessing }
@@ -65,13 +70,6 @@ NECPreferences class >> caseSensitive [
 { #category : #accessing }
 NECPreferences class >> caseSensitive: aBoolean [
 	caseSensitive := aBoolean
-]
-
-{ #category : #private }
-NECPreferences class >> currentController [ 
-	^ (Smalltalk tools hasToolNamed: #codeCompletion)
-		ifTrue: [ Smalltalk tools codeCompletion ]
-		ifFalse: [ nil ]
 ]
 
 { #category : #defaults }
@@ -131,7 +129,7 @@ NECPreferences class >> initialize [
 	caseSensitive := true.
 	smartCharacters := true.
 	expandPrefixes := true.
-	captureNavigationKeys := false.
+	captureNavigationKeys := true.
 	useEnterToAccept := self defaultUseEnterToAccept.
 	smartCharactersMapping := Dictionary new.
 	smartCharactersMapping
@@ -189,39 +187,58 @@ NECPreferences class >> settingsOn: aBuilder [
 		target: self;
 		parentName: #codeBrowsing;
 		selector: #enabled;
+		default: true;
 		iconName: #smallConfigurationIcon;
 		description: 'Enable or disable code completion in browsers, debuggers and workspaces.';
 		with: [ 
-					| availableControllers |
-					availableControllers := self availableControllers.
+					| availableControllers availableSorters |
+					availableControllers := self availableEngines.
 					availableControllers size > 1
 						ifTrue: [ 
-							(aBuilder pickOne: #completionController)
+							(aBuilder pickOne: #completionEngineClass)
 								order: -1;
-								label: 'Controller';
-								getSelector: #currentController;
-								setSelector: #useController:;
+								label: 'CompletionEngine';
+								target: RubSmalltalkEditor;
+								getSelector: #completionEngineClass;
+								setSelector: #completionEngineClass:;
 								domainValues: availableControllers ].
+					availableSorters := self availableSorters.
+					availableSorters size > 1
+						ifTrue: [ 
+							(aBuilder pickOne: #completionSorter)
+								order: -1;
+								label: 'Sorter';
+								target: CompletionContext;
+								getSelector: #sorterClass;
+								setSelector: #sorterClass:;
+								domainValues: availableSorters ].
 					(aBuilder setting: #backgroundColor)
+						default: Color veryDarkGray;
 						label: 'Background Color'.
 					(aBuilder setting: #expandPrefixes)
+						default: true;
 						label: 'Complete common prefixes using TAB in the suggested completions'.
 					(aBuilder setting: #useEnterToAccept)
 						label: 'Use ENTER to accept a suggested completion';
 						default: self defaultUseEnterToAccept.
 					(aBuilder setting: #captureNavigationKeys)
+						default: true;
 						label: 'Use navigation keys for extended completion functionality'.
 					(aBuilder setting: #caseSensitive)
 						label: 'Case Sensitive';
+						default: true;
 						description: 'Decide if you want eCompletion to be case sensitive or not.'.
 					(aBuilder setting: #smartCharacters)
 						label: 'Smart Characters';
+						default: true;
 						description: 'Decide if you want eCompletion to use smart characters, e.g, to automatically close brackets.'.
 					(aBuilder setting: #smartCharactersWithSingleSpace)
 						label: 'Smart Characters with Single Space';
+						default: '';
 				 		description: 'Enumerate the characters which are automatically inserted with a single space in between.'.
 					(aBuilder setting: #smartCharactersWithDoubleSpace) 
 						label: 'Smart Characters with Double Space';
+						default: '[]{}';
 				 		description: 'Enumerate the characters which are automatically inserted with a two spaces in between.'.
 					(aBuilder setting: #popupShowAutomatic)
 						default: self defaultPopupShowAutomatic;
@@ -291,12 +308,8 @@ NECPreferences class >> spaceAfterCompletion: anObject [
 
 { #category : #accessing }
 NECPreferences class >> theme [
+	self flag: #SmalltalkReference.
 	^ Smalltalk ui theme
-]
-
-{ #category : #private }
-NECPreferences class >> useController: aClass [
-	aClass registerToolsOn: Smalltalk tools
 ]
 
 { #category : #accessing }

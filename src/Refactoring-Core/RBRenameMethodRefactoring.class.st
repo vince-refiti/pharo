@@ -38,9 +38,10 @@ RBRenameMethodRefactoring class >> renameMethod: aSelector in: aClass to: newSel
 
 { #category : #testing }
 RBRenameMethodRefactoring >> hasPermutedArguments [
-	^hasPermutedArguments isNil 
-		ifTrue: [hasPermutedArguments := super hasPermutedArguments]
-		ifFalse: [hasPermutedArguments]
+
+	^ hasPermutedArguments
+		ifNil: [ hasPermutedArguments := super hasPermutedArguments ]
+		ifNotNil: [ hasPermutedArguments ]
 ]
 
 { #category : #testing }
@@ -73,8 +74,8 @@ RBRenameMethodRefactoring >> parseTreeRewriter [
 RBRenameMethodRefactoring >> preconditions [
 	| newCondition |
 	newCondition := (RBCondition 
-							withBlock: [newSelector = oldSelector]
-							errorString: 'The selectors are <1?:not >equivalent') 
+							withBlock: [ newSelector = oldSelector ]
+							errorString: 'The selector name has <1?not:> changed <1?:to #', newSelector, '>') 
 						& (RBCondition 
 							withBlock: [permutation asArray ~= (1 to: oldSelector numArgs) asArray]
 							errorString: 'The arguments are <1?:not >permuted').

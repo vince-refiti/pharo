@@ -449,7 +449,7 @@ SortedCollectionTest >> test0FixtureTConvertAsSetForMultiplinessTest [
 	self elementsCopyNonIdenticalWithoutEqualElements
 		detect: [ :each | (self elementsCopyNonIdenticalWithoutEqualElements occurrencesOf: each) > 1 ]
 		ifNone: [ res := false ].
-	self assert: res = false
+	self assert: res equals: false
 ]
 
 { #category : #'tests - basic' }
@@ -515,6 +515,17 @@ SortedCollectionTest >> testCollect [
 	
 ]
 
+{ #category : #tests }
+SortedCollectionTest >> testComma [
+	| sortBlock collOne collTwo combined |
+	sortBlock := [ :a :b | a > b ].
+	collOne := (1 to: 5) asSortedCollection: sortBlock.
+	collTwo := (6 to: 10) asSortedCollection: sortBlock.
+	combined := collOne , collTwo.
+	self assert: combined sortBlock equals: sortBlock.
+	self assert: combined asArray equals: (1 to: 10) asArray reverse
+]
+
 { #category : #'tests - basic' }
 SortedCollectionTest >> testCopy [
 		
@@ -568,6 +579,20 @@ SortedCollectionTest >> testEquals [
 SortedCollectionTest >> testFlatCollect [
 
 	self assert: (#(1 2) asSortedCollection flatCollect: [ :x | { x } ]) equals: #(1 2) asOrderedCollection
+]
+
+{ #category : #tests }
+SortedCollectionTest >> testGroupedBySortedCollection [
+	| collection grouped |
+	collection := Object methods asSortedCollection: #selector ascending.
+	
+	grouped := collection groupedBy: #methodClass.
+	
+	"do we retain the sortblock?"
+	self assert: grouped values first class equals: SortedCollection.
+	self assert: collection sortBlock equals: grouped values first sortBlock.
+	
+	
 ]
 
 { #category : #'tests - includes' }
@@ -719,11 +744,21 @@ SortedCollectionTest >> testLastIndexOfStartingAt [
 ]
 
 { #category : #'tests - basic' }
-SortedCollectionTest >> testMedian [
+SortedCollectionTest >> testMedianForEvenSizeCollection [
 	
 	|aSortedCollection|
-	aSortedCollection := (1 to: 10) asSortedCollection.
-	self assert: aSortedCollection median equals: 5.
+	aSortedCollection := {1 .2 . 3 . 4 . 5 . 6 } asSortedCollection.
+	self assert: aSortedCollection median equals: 3.5
+	
+	
+]
+
+{ #category : #'tests - basic' }
+SortedCollectionTest >> testMedianForOddSizeCollection [
+	
+	|aSortedCollection|
+	aSortedCollection := {1 .2 . 3 . 4 . 5 . 6 .7} asSortedCollection.
+	self assert: aSortedCollection median equals: 4.
 	
 	aSortedCollection := SortedCollection new.
 	aSortedCollection 
@@ -733,6 +768,14 @@ SortedCollectionTest >> testMedian [
 
 	self assert: aSortedCollection median equals: 'porcinet'
 	
+]
+
+{ #category : #'tests - basic' }
+SortedCollectionTest >> testMedianWithNumbers [
+
+	| aSortedCollection |
+	aSortedCollection := (1 to: 10) asSortedCollection.
+ 	self assert: aSortedCollection median equals: 5.5
 ]
 
 { #category : #'tests - basic' }
@@ -795,6 +838,15 @@ SortedCollectionTest >> testSortBlock [
 	
 	
 	
+]
+
+{ #category : #'tests - basic' }
+SortedCollectionTest >> testSortUsing [
+	| aSortedCollection |
+	aSortedCollection := (SortedCollection sortUsing: #yourself ascending)
+		addAll: #(2 6 3 8 4 3 7 6);
+		yourself.
+	self assert: aSortedCollection asArray equals: #(2 3 3 4 6 6 7 8)
 ]
 
 { #category : #'tests - basic' }

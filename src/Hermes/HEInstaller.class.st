@@ -70,8 +70,7 @@ HEInstaller >> build: aHEClass [
 		sharedVariables:  (self asClassVariables:aHEClass classVariables);
 		sharedPools: aHEClass sharedPools;
 		category: aHEClass category;
-		classSlots: (self asSlots: aHEClass classInstancevariables);
-		copyClassSlotsFromExistingClass ].
+		classSlots: (self asSlots: aHEClass classInstancevariables) ].
 	
 	self processTraitsFrom: aHEClass in: newClass.
 	
@@ -92,7 +91,7 @@ HEInstaller >> buildTrait: aTraitDefinition [
 	newTrait := traitClass
 		named: aTraitDefinition traitName
 		uses: traitComposition
-		category: aTraitDefinition category
+		package: aTraitDefinition category
 		env: environment.
 
 	newTrait classTrait traitComposition: (aTraitDefinition classTraitComposition asLiteralIn: environment) asTraitComposition.
@@ -158,7 +157,7 @@ HEInstaller >> existingClass: aHEClass [
 ]
 
 { #category : #'validating existance' }
-HEInstaller >> existingTrait: aHETrait. [
+HEInstaller >> existingTrait: aHETrait [
 	(environment includesKey: aHETrait traitName) ifTrue:[ 
 		self error: (self messageExistingTrait: aHETrait)
 	].
@@ -275,6 +274,6 @@ HEInstaller >> shouldBuildMethod: aHEMethod in: aClass [
 HEInstaller >> validateNoNewUndeclared [
 	self reportNewUndeclareds: self createdUndeclared.
 	
-	('[Hermes] Remaining Undeclared variables in the system: '
-		, Undeclared keys printString) logCr
+	SystemNotification signal: ('[Hermes] Remaining Undeclared variables in the system: '
+		, Undeclared keys printString)
 ]

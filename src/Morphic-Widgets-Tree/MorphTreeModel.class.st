@@ -27,7 +27,7 @@ MorphTreeModel class >> exampleCheckList1 [
 				beCheckList;
 				rootItems: (Object allSubclasses sort: [:a :b | a name <= b name]);
 				 headerLabel: 'Sub-classes';
-				 openDialogWindowIn: World title: 'All Object sub-classes ready to be checked']
+				 openDialogWindowIn: self currentWorld title: 'All Object sub-classes ready to be checked']
 ]
 
 { #category : #examples }
@@ -41,7 +41,7 @@ MorphTreeModel class >> exampleCheckList2 [
 		 autoMultiSelection: true;
 		 headerLabel: 'Plop';
 		 beCheckList.
-	^ (model openDialogWindowIn: World title: 'All Morph methods')
+	^ (model openDialogWindowIn: self currentWorld title: 'All Morph methods')
 
 ]
 
@@ -87,11 +87,6 @@ MorphTreeModel class >> itemsList: itemsList itemsHeaderName: aName wrapBlockOrS
 		rootItems: itemsList;
 		headerLabel: aName;
 		yourself
-]
-
-{ #category : #accessing }
-MorphTreeModel class >> theme [
-	^ Smalltalk ui theme
 ]
 
 { #category : #'keyboard managing' }

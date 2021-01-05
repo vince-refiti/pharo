@@ -14,19 +14,15 @@ RBRemoveClassTransformationTest >> resumeIfCannotRemove: error [
 
 { #category : #testing }
 RBRemoveClassTransformationTest >> testRefactoring [
-
 	| refactoring |
-	refactoring := (RBRemoveClassTransformation 
-						className: #RBFooDummyLintRuleTest1)
-						asRefactoring.
-	
+	refactoring := (RBRemoveClassTransformation className: #RBFooDummyLintRuleTest1) asRefactoring.
+
 	[ refactoring transform ]
 		on: RBRefactoringError
 		do: [ :error | self resumeIfCannotRemove: error ].
-		
+
 	self assert: (refactoring model classNamed: #RBFooDummyLintRuleTest1) isNil.
-	self assert: (refactoring model classNamed: 'RBTransformationDummyRuleTest1' asSymbol) superclass
-					= (refactoring model classNamed: #RBDummyLintRuleTest)
+	self assert: (refactoring model classNamed: 'RBTransformationDummyRuleTest1' asSymbol) superclass equals: (refactoring model classNamed: #RBDummyLintRuleTest)
 ]
 
 { #category : #testing }
@@ -41,7 +37,7 @@ RBRemoveClassTransformationTest >> testRemoveClassWithBadName [
 RBRemoveClassTransformationTest >> testRemoveClassWithReferences [
 
 	self shouldFail: (RBRemoveClassTransformation
-							className: #RBBasicLintRuleTest)
+							className: #RBBasicLintRuleTestData)
 							asRefactoring 
 ]
 
@@ -49,7 +45,7 @@ RBRemoveClassTransformationTest >> testRemoveClassWithReferences [
 RBRemoveClassTransformationTest >> testRemoveClassWithSubclasses [
 
 	self shouldFail: (RBRemoveClassTransformation
-							className: #RBFooLintRuleTest1)
+							className: #RBFooLintRuleTestData1)
 							asRefactoring
 ]
 

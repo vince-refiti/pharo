@@ -2,7 +2,6 @@ Class {
 	#name : #MCMergingTest,
 	#superclass : #MCTestCase,
 	#instVars : [
-		'conflictBlock',
 		'conflicts'
 	],
 	#category : #'Monticello-Tests-Base'
@@ -10,20 +9,17 @@ Class {
 
 { #category : #asserting }
 MCMergingTest >> assert: aCollection hasElements: anArray [
-	self assert: (aCollection collect: [:ea | ea token]) asSet = anArray asSet
+	self assert: (aCollection collect: [ :ea | ea token ]) asSet equals: anArray asSet
 ]
 
 { #category : #asserting }
 MCMergingTest >> assertMerge: local with: remote base: ancestor gives: result conflicts: conflictResult [
 	| merger |
 	conflicts := #().
-	merger := MCThreeWayMerger
-				base: (self snapshotWithElements: local)
-				target: (self snapshotWithElements: remote)
-				ancestor: (self snapshotWithElements: ancestor).
-	merger conflicts do: [:ea | self handleConflict: ea].
+	merger := MCThreeWayMerger base: (self snapshotWithElements: local) target: (self snapshotWithElements: remote) ancestor: (self snapshotWithElements: ancestor).
+	merger conflicts do: [ :ea | self handleConflict: ea ].
 	self assert: merger mergedSnapshot definitions hasElements: result.
-	self assert: conflicts asSet = conflictResult asSet.
+	self assert: conflicts asSet equals: conflictResult asSet
 ]
 
 { #category : #emulating }

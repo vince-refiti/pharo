@@ -30,7 +30,7 @@ Class {
 { #category : #'instance creation' }
 MenubarMorph class >> closeAll [
 
-	World submorphs
+	self currentWorld submorphs
 		select: [ :e | e isKindOf: MenubarMorph ]
 		thenDo: [ :e | e delete ].
 ]
@@ -58,6 +58,7 @@ MenubarMorph class >> menubarSettingOn: aBuilder [
 		target: self;
 		parent: #morphic;
 		label: 'Show menubar';
+		default: true;
 		description: 'Whether the world''s menubar should be shown or not.'
 ]
 
@@ -79,7 +80,7 @@ MenubarMorph class >> open [
 		open.
 ]
 
-{ #category : #'instance creation' }
+{ #category : #initialization }
 MenubarMorph class >> reset [
 
 	<script>

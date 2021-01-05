@@ -716,6 +716,7 @@ Context >> evaluateSignal: exception [
 	See MethodContext>>#isHandlerOrSignalingContext. "
 
 	<primitive: 199>
+	<debuggerCompleteToSender>
 	| value |
 	exception privHandlerContext: self contextTag.
 	value := self exceptionHandlerBlock cull: exception.	
@@ -769,12 +770,13 @@ Context >> findContextSuchThat: testBlock [
 
 { #category : #'private-exceptions' }
 Context >> findNextHandlerContext [
+
 	"Return the next handler marked context, returning nil if there is none.  Search starts with self and proceeds up to nil."
 
 	| context |
+
 	context := self findNextHandlerOrSignalingContext.
-	context isNil
-		ifTrue: [ ^ nil ].
+	context ifNil: [ ^ nil ].
 	context isHandlerContext
 		ifTrue: [ ^ context ].	"If it isn't a handler context, it must be a signaling context.
 	When we reach a signaling context we must skip over any handlers
@@ -842,7 +844,7 @@ Context >> findSimilarSender [
 { #category : #'private-exceptions' }
 Context >> handleSignal: exception [
 	"Sent to handler (on:do:) contexts only.  If my exception class (first arg) handles exception then execute my handle block (second arg), otherwise forward this message to the next handler context.  If none left, execute exception's defaultAction (see nil>>handleSignal:)."
-
+	<debuggerCompleteToSender>
 	(self exceptionClass handles: exception)
 		ifFalse: [ ^ self nextHandlerContext handleSignal: exception ].
 	self evaluateSignal: exception
@@ -1186,15 +1188,14 @@ Context >> object: anObject perform: selector withArguments: argArray inClass: l
 	 Primitive. Essential for the debugger."
 
 	<primitive: 100 error: error>
-	(selector isSymbol) ifFalse:
-		[^self error: 'selector argument must be a Symbol'].
-	(argArray isMemberOf: Array) ifFalse:
-		[^self error: 'argArray must be an Array'].
-	(selector numArgs = argArray size)
-		ifFalse: [^self error: 'incorrect number of arguments'].
-	((self objectClass: anObject) == lookupClass
-	 or: [(self objectClass: anObject) inheritsFrom: lookupClass]) ifFalse:
-		[^self error: 'lookupClass is not in anObject''s inheritance chain'].
+	selector isSymbol
+		ifFalse: [ ^ self error: 'selector argument must be a Symbol' ].
+	(argArray isMemberOf: Array)
+		ifFalse: [ ^ self error: 'argArray must be an Array' ].
+	selector numArgs = argArray size
+		ifFalse: [ ^ self error: 'incorrect number of arguments' ].
+	((self objectClass: anObject) includesBehavior: lookupClass)
+		ifFalse: [ ^ self error: 'lookupClass is not in anObject''s inheritance chain' ].
 	self primitiveFailed
 ]
 
@@ -1359,7 +1360,7 @@ Context >> printOn: aStream [
 			outerContext printOn: aStream ]
 ]
 
-{ #category : #'initialize-release' }
+{ #category : #initialization }
 Context >> privRefresh [
 	"Reinitialize the receiver so that it is in the state it was at its creation."
 	 closureOrNil
@@ -1375,7 +1376,7 @@ Context >> privRefresh [
 				[:i | self tempAt: i put: nil]]
 ]
 
-{ #category : #'initialize-release' }
+{ #category : #initialization }
 Context >> privRefreshWith: aCompiledMethod [ 
 	"Reinitialize the receiver as though it had been for a different method. 
 	 Used by a Debugger when one of the methods to which it refers is 
@@ -1671,10 +1672,9 @@ Context >> runUntilErrorOrReturnFrom: aSender [
 	"Insert ensure and exception handler contexts under aSender"
 	error := nil.
 	context := aSender insertSender: (Context
-		contextOn: Error do: [:ex |
+		contextOn: Error, Halt do: [:ex |
 			error ifNil: [
-				"this is ugly but it fixes the side-effects of not sending an Unhandled error on Halt"
-				error := (ex isKindOf: UnhandledError) ifTrue: [ ex exception ] ifFalse: [ ex ].
+				error := ex.
 				topContext := thisContext.
 				ex resumeUnchecked: here jump ]
 			ifNotNil: [ ex pass ]]).
@@ -1792,9 +1792,9 @@ Context >> sender [
 
 { #category : #private }
 Context >> setNamedPrimitiveInformationFrom: fromMethod toMethod: toMethod [
-	"For named primitives, the first literal contains a special object that has information of the primitive. Example:
-(StandardFileStream >> #primOpen:writable:) literalAt: 1 ----->>>>   #(#FilePlugin #primitiveFileOpen 0 147).
-In this method we cope such information from one to another one."
+	"For named primitives, the first literal contains a special object that has information of the primitive. In this method we cope such information from one to another one."
+	"((StandardFileStream >> #primOpen:writable:) literalAt: 1) >>> #(#FilePlugin #primitiveFileOpen 0 0)"
+
 	| spec |	
 	spec := toMethod literalAt: 1.	
 	spec replaceFrom: 1 to: spec size with: (fromMethod literalAt: 1) startingAt: 1.

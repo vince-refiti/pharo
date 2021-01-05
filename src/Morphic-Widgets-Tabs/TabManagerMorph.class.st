@@ -133,7 +133,7 @@ TabManagerMorph >> barDeleted: aBar [
 
 { #category : #'private-drawing' }
 TabManagerMorph >> borderColor [
-	^ Smalltalk ui theme borderColor
+	^ self theme borderColor
 ]
 
 { #category : #protocol }
@@ -162,7 +162,7 @@ TabManagerMorph >> closeAllTabs [
 
 { #category : #'private-drawing' }
 TabManagerMorph >> containerColor [
-	^ Smalltalk ui theme lightBaseColor
+	^ self theme lightBaseColor
 ]
 
 { #category : #protocol }
@@ -181,7 +181,7 @@ TabManagerMorph >> deleteSelectedTabs [
 
 { #category : #drawing }
 TabManagerMorph >> drawLinesOn: aCanvas [
-	self flag: #TODO. "this method, I don't know what's is for."
+	self flag: #pharoTodo. "this method, I don't know what's is for."
 	"aCanvas
 		line: self topLeft
 		to: self bottomLeft
@@ -405,10 +405,10 @@ TabManagerMorph >> themeChanged [
 	toolbar themeChanged.
 	
 	container
-		color: Smalltalk ui theme lightBaseColor;
+		color: self theme lightBaseColor;
 		changed.
 	contentsWrapper
-		color: Smalltalk ui theme lightBaseColor;
+		color: self theme lightBaseColor;
 		changed
 ]
 

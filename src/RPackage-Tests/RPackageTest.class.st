@@ -74,6 +74,28 @@ RPackageTest >> testAddClassFromTag [
 ]
 
 { #category : #tests }
+RPackageTest >> testAllUnsentMessages [
+	| package class1 class2 |
+	
+	package := (RPackage named: #Test1) register.
+	
+	class1 := self createNewClassNamed: 'TestClass' inCategory: 'Test1-TAG'.
+	class2 := self createNewClassNamed: 'TestClassOther' inCategory: 'Test1-TAG'.
+	
+	class1
+		compile: 'nonexistingMethodName1 42';
+		compile: 'nonexistingMethodName2 42'.
+		
+	class2
+		compile: 'nonexistingMethodName3 42';
+		compile: 'nonexistingMethodName4 class1 new nonexistingMethodName2'.
+		
+	self assert: package allUnsentMessages size equals: 3.
+	
+	self assert: package allUnsentMessages asSet equals: (#('nonexistingMethodName1' 'nonexistingMethodName3' 'nonexistingMethodName4') collect: #asSymbol) asSet.
+]
+
+{ #category : #tests }
 RPackageTest >> testAnonymousClassAndSelector [
 	"jgeidel test case from issue 12628."
 
@@ -242,5 +264,5 @@ RPackageTest >> testRoots [
 	| roots |
 	roots := (RPackageOrganizer default packageNamed: #'RPackage-Tests') roots.
 	roots := roots collect: [ :each | each name ].
-	#(RPackageStringExtensionTest RPackageRenameTest TestRPackagePrequisites PackageChecker RPackageTestCase RPackageWithDoTest) do: [ :each | roots includes: each ]
+	#(RPackageStringExtensionTest RPackageRenameTest TestRPackagePrequisites RPackageTestCase RPackageWithDoTest) do: [ :each | roots includes: each ]
 ]

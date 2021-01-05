@@ -91,8 +91,10 @@ RFValueReification >> genForRBReturnNode [
 
 { #category : #generate }
 RFValueReification >> genForRBVariableNode [
-	entity isGlobal ifTrue: [^RFLiteralVariableNode value: entity binding value]. 
-	^RBVariableNode named: entity name.
+	entity binding
+		ifNotNil: [ entity isGlobal
+				ifTrue: [ ^ RFLiteralVariableNode value: entity binding value ] ].
+	^ RBVariableNode named: entity name
 ]
 
 { #category : #generate }
@@ -117,7 +119,7 @@ RFValueReification >> preambleForArray: aNode [
 			preamble add:  (RFStorePopIntoTempNode named: name).
 	].
 	
-	self flag: #TBD. "for #instead we do not need to build the stack up again as the array creation bytecode is missing"
+	self flag: #pharoTodo. "for #instead we do not need to build the stack up again as the array creation bytecode is missing"
 	(1 to: aNode size) withIndexDo: [:each :index |  
 			| name |
 			name := 'RFArg', index asString, 'RFReification'.

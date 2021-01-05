@@ -1,6 +1,6 @@
 Class {
 	#name : #ExternalBrowserTest,
-	#superclass : #TestCase,
+	#superclass : #AbstractEnvironmentTestCase,
 	#instVars : [
 		'initialWindows',
 		'file'
@@ -51,21 +51,21 @@ ExternalBrowserTest >> initFileWithSuffix: suffix [
 	file := FileSystem workingDirectory / self fileNameForTest, '.', suffix.
 	file
 		writeStreamDo: [ :stream | stream nextPutAll: self fileForTestContent ].
-	initialWindows := World windowsSatisfying: [: each| true ].
+	initialWindows := self currentWorld windowsSatisfying: [: each| true ].
 ]
 
 { #category : #running }
 ExternalBrowserTest >> setUp [
 	super setUp.
-	initialWindows := World windowsSatisfying: [: each| true ].
+	initialWindows := self currentWorld windowsSatisfying: [: each| true ].
 ]
 
 { #category : #running }
 ExternalBrowserTest >> tearDown [ 
 	| newWindows |
 	file deleteIfAbsent: [ ].
-	self class environment at: self classNameForTest  ifPresent: [ : cl | cl removeFromSystem ].
-	newWindows := World windowsSatisfying: [ : each | (initialWindows includes: each) not ].
+	testingEnvironment at: self classNameForTest ifPresent: [ : cl | cl removeFromSystem ].
+	newWindows := self currentWorld windowsSatisfying: [ : each | (initialWindows includes: each) not ].
 	newWindows do: #delete.
 	super tearDown.
 ]

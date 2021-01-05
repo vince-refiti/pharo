@@ -117,9 +117,9 @@ GTSpotterStep >> candidates [
 
 	^ candidates ifNil: [
 		candidates := GTSpotterCandidatesList new.
-		candidates announcer subscribe: GTSpotterCandidateAdded send: #onCandidateAdded to: self.
-		candidates announcer subscribe: GTSpotterAllCandidatesAdded send: #onCandidateAdded to: self.
-		candidates announcer subscribe: GTSpotterAllCandidatesRemoved do: [ self deselect ].
+		candidates announcer when: GTSpotterCandidateAdded send: #onCandidateAdded to: self.
+		candidates announcer when: GTSpotterAllCandidatesAdded send: #onCandidateAdded to: self.
+		candidates announcer when: GTSpotterAllCandidatesRemoved do: [ self deselect ].
 		candidates ]
 ]
 
@@ -253,12 +253,6 @@ GTSpotterStep >> isCategorySelected: aProcessor [
 	<return: #Boolean>
 	
 	^ self hasSelected and: [ self selected processor == aProcessor ]
-]
-
-{ #category : #'zz-deprecated' }
-GTSpotterStep >> isEmpty [
-	self deprecated: 'Use hasCandidates instead'.
-	^ self hasCandidates not
 ]
 
 { #category : #testing }
@@ -422,7 +416,7 @@ GTSpotterStep >> relevantProcessorsProcess: aSpotterContext [
 		do: [ :exception | 
 			self exceptionHandler 
 				handleException: exception 
-				do: [ ('[Spotter] Exception in process: ', exception asString) logCr ] ]
+				do: [ ('[Spotter] Exception in process: ', exception asString) traceCr ] ]
 ]
 
 { #category : #selecting }

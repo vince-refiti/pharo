@@ -14,14 +14,14 @@ The #start and #stop methods are used to find the source that corresponds to thi
 
 The #acceptVisitor: method is used by RBProgramNodeVisitors (the visitor pattern). This will also require updating all the RBProgramNodeVisitors so that they know of the new node.
 
-The #isFaulty method is used to distinguish between valid nodes and nodes created from invalid source Smalltalk code. For example, code parsed with RBParsers #parseFaultyExpression: or #parseFaultyMethod:.
+The #isFaulty method is used to distinguish between valid nodes and nodes created from an invalid source Smalltalk code. For example, code parsed with RBParsers #parseFaultyExpression: or #parseFaultyMethod:.
 
 Subclasses might also want to redefine match:inContext: and copyInContext: to do parse tree searching and replacing.
 
 Subclasses that contain other nodes should override equalTo:withMapping: to compare nodes while ignoring renaming temporary variables, and children that returns a collection of our children nodes.
 
 Instance Variables:
-	properties	<Dictionary of: Symbol -> Object>	A set of properties set to this node, for example every node can have the Property #comment to attach the method comment or the comment of the code line this node represents. Other classes or tools may add more type of properties, for example, the reflectivity support adds properties for managing Metalinks. 
+	properties	<Dictionary of: Symbol -> Object>	A set of properties set to this node, for example every node can have the Property #comment to attach the method comment or the comment of the code line this node represents. Other classes or tools may add more type of properties; for example, the reflectivity support adds properties for managing Metalinks. 
 	parent	<RBProgramNode>	the node we're contained in
 
 Class Variables:
@@ -30,7 +30,7 @@ Class Variables:
 "
 Class {
 	#name : #RBProgramNode,
-	#superclass : #Object,
+	#superclass : #RBNode,
 	#instVars : [
 		'parent',
 		'properties'
@@ -43,7 +43,7 @@ Class {
 
 { #category : #accessing }
 RBProgramNode class >> formatterClass [
-	^ FormatterClass ifNil: [ RBNullFormatter ] ifNotNil: [ FormatterClass ]
+	^ FormatterClass ifNil: [ RBSimpleFormatter ] ifNotNil: [ FormatterClass ]
 ]
 
 { #category : #accessing }
@@ -63,11 +63,6 @@ RBProgramNode class >> resetFormatter [
 	self formatterClass: nil
 
 	
-]
-
-{ #category : #visiting }
-RBProgramNode >> acceptVisitor: aProgramNodeVisitor [ 
-	self subclassResponsibility
 ]
 
 { #category : #replacing }
@@ -121,6 +116,13 @@ RBProgramNode >> allTemporaryVariables [
 			vars
 				addAll: each allTemporaryVariables;
 				yourself]
+]
+
+{ #category : #accessing }
+RBProgramNode >> allVariables [
+	"Return all the variables in subnodes"
+
+	^ self allChildren select: [ :each | each isVariable ]
 ]
 
 { #category : #accessing }
@@ -264,7 +266,7 @@ RBProgramNode >> copyList: matchNodes inContext: aDictionary [
 { #category : #accessing }
 RBProgramNode >> debugHighlightRange [
 
-	^ self debugHighlightStart to: self debugHighlightStop .
+	^ self debugHighlightStart to: self debugHighlightStop
 ]
 
 { #category : #accessing }
@@ -298,12 +300,12 @@ RBProgramNode >> do: aBlock [
 
 { #category : #generation }
 RBProgramNode >> dump [
-	^  String streamContents: [:s | self dumpOn: s]
-]
+	"Generate a literal expression that recreates the receiver"
 
-{ #category : #generation }
-RBProgramNode >> dumpOn: aStream [
-	self subclassResponsibility 
+	| visitor |
+	visitor := RBDumpVisitor new.
+	self acceptVisitor: visitor.
+	^ visitor stream contents
 ]
 
 { #category : #comparing }
@@ -342,6 +344,14 @@ RBProgramNode >> formatterClass [
 ]
 
 { #category : #testing }
+RBProgramNode >> hasComments [
+	"Answer whether the receiver as comments"
+	
+	^ self comments isNotEmpty
+	
+]
+
+{ #category : #testing }
 RBProgramNode >> hasMultipleReturns [
 	| count |
 	count := 0.
@@ -359,6 +369,11 @@ RBProgramNode >> hasProperty: aKey [
 { #category : #comparing }
 RBProgramNode >> hashForCollection: aCollection [
 	^ aCollection isEmpty ifTrue: [ 0 ] ifFalse: [ aCollection first hash ]
+]
+
+{ #category : #querying }
+RBProgramNode >> instanceVariableNodes [
+		^self variableNodes select: [:each | each isInstance]
 ]
 
 { #category : #querying }
@@ -420,7 +435,8 @@ RBProgramNode >> isEvaluatedFirst [
 
 { #category : #testing }
 RBProgramNode >> isFaulty [
-	self subclassResponsibility
+	"return true if the AST contains a RBParseErrorNode"
+	^false
 ]
 
 { #category : #deprecated }
@@ -625,6 +641,17 @@ RBProgramNode >> newSource [
 	^self formattedCode
 ]
 
+{ #category : #'node access' }
+RBProgramNode >> nodeForOffset: anInteger [
+	| children |
+	"choosing the best node on the specific offset"
+	children := self children.
+	"when we are on a leaf, we take the leaf node"
+	(children isEmpty) ifTrue: [ (self sourceInterval includes: anInteger) ifTrue: [^self]].
+	"if the node has children then we check the children"
+	children do: [:each | (each sourceInterval includes: anInteger) ifTrue: [^each nodeForOffset: anInteger] ].
+]
+
 { #category : #iterating }
 RBProgramNode >> nodesDo: aBlock [ 
 	aBlock value: self.
@@ -683,7 +710,7 @@ RBProgramNode >> propertyAt: aKey ifAbsent: aBlock [
 	"Answer the property value associated with aKey or, if aKey isn't found, answer the result of evaluating aBlock."
 	
 	^ properties 
-		ifNil: [ aBlock value ]
+		ifNil: aBlock
 		ifNotNil: [ properties at: aKey ifAbsent: aBlock ]
 ]
 
@@ -698,7 +725,7 @@ RBProgramNode >> propertyAt: aKey ifAbsentPut: aBlock [
 RBProgramNode >> propertyAt: aKey ifPresent: aPresentBlock ifAbsent: anAbsentBlock [
 	"Answer the property value associated with aKey or, if aKey is found, answer the result of evaluating aPresentBlock, else evaluates anAbsentBlock."
 
-	^ properties ifNil: [ anAbsentBlock ] ifNotNil: [ properties at: aKey ifPresent: aPresentBlock ifAbsent: anAbsentBlock ]
+	^ properties ifNil: anAbsentBlock ifNotNil: [ properties at: aKey ifPresent: aPresentBlock ifAbsent: anAbsentBlock ]
 ]
 
 { #category : #properties }

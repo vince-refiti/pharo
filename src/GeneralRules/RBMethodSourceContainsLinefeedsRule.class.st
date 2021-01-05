@@ -21,8 +21,16 @@ RBMethodSourceContainsLinefeedsRule class >> uniqueIdentifierName [
 
 { #category : #running }
 RBMethodSourceContainsLinefeedsRule >> check: aMethod forCritiquesDo: aCriticBlock [
-	(aMethod sourceCode includes: Character lf) ifTrue: [ 
-		aCriticBlock cull: (self critiqueFor: aMethod) ]
+	| linefeeds |
+	linefeeds := aMethod sourceCode allRangesOfSubstring: String lf.
+	
+	linefeeds do: [ :lfInterval |
+			aCriticBlock cull: (ReTrivialCritique  
+			withAnchor: (ReIntervalSourceAnchor
+				entity: aMethod
+				interval: lfInterval)
+			by: self
+			hint: 'lf') ]
 ]
 
 { #category : #accessing }

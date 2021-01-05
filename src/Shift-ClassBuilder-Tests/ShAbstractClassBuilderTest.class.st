@@ -21,14 +21,14 @@ ShAbstractClassBuilderTest >> doValidateMethods: selectors on: class [
 	selectors
 		do: [ :selector | 
 			self assert: (class canUnderstand: selector).
-			self assert: (class >> selector) classBinding value == class ]
+			self assert: (class >> selector) classBinding value identicalTo: class ]
 ]
 
 { #category : #running }
 ShAbstractClassBuilderTest >> setUp [
 	super setUp.
 	builder := ShiftClassBuilder new.
-	builder buildEnvironment: ShSmalltalkGlobalsEnvironment new.
+	builder buildEnvironment: ShSmalltalkGlobalsEnvironment new
 ]
 
 { #category : #validation }
@@ -63,16 +63,15 @@ ShAbstractClassBuilderTest >> validateResult [
 	| obj |
 	self assert: result isClass.
 	self assert: result class isMeta.
-	
+
 	obj := result new.
 	self assert: obj isNotNil.
-	self assert: obj class == result.
-
+	self assert: obj class identicalTo: result
 ]
 
 { #category : #validation }
 ShAbstractClassBuilderTest >> validateSharedPools: pools [
-	self assertCollection: result sharedPools equals: pools asOrderedCollection.
+	self assertCollection: result sharedPools equals: pools asOrderedCollection
 ]
 
 { #category : #validation }
@@ -101,5 +100,5 @@ ShAbstractClassBuilderTest >> validateSlots: allSlots [
 
 { #category : #'private validating' }
 ShAbstractClassBuilderTest >> validateSuperclass: aSuperclass [
-	self assert: result superclass == aSuperclass.
+	self assert: result superclass identicalTo: aSuperclass
 ]

@@ -8,38 +8,62 @@ Class {
 }
 
 { #category : #'instance creation' }
-MCTraitDefinition class >> name: classNameString traitComposition:  traitCompositionString category:  categoryString comment:  commentString commentStamp: commentStamp [
-	^ self instanceLike:
-		(self new initializeWithName: classNameString 
-			traitComposition:  traitCompositionString
-			category:  categoryString
-			comment:  commentString  
-			commentStamp:   commentStamp)
-
+MCTraitDefinition class >> name: classNameString traitComposition: traitCompositionString category: categoryString comment: commentString commentStamp: commentStamp [
+	^ self new
+		initializeWithName: classNameString
+		traitComposition: traitCompositionString
+		category: categoryString
+		comment: commentString
+		commentStamp: commentStamp
 ]
 
 { #category : #'instance creation' }
-MCTraitDefinition class >> name: classNameString traitComposition:  traitCompositionString category:  categoryString instVarNames: ivarArray classInstVarNames: civarArray comment:  commentString commentStamp:   commentStamp [
-	^ self instanceLike:
-		(self new initializeWithName: classNameString 
-			traitComposition:  traitCompositionString
-			category:  categoryString
-			instVarNames: ivarArray
-			classInstVarNames: civarArray
-			comment:  commentString  
-			commentStamp:   commentStamp)
+MCTraitDefinition class >> name: classNameString traitComposition: traitCompositionString category: categoryString instVarNames: ivarArray classInstVarNames: civarArray classTraitComposition: classTraitCompositionString comment: commentString commentStamp: commentStamp [
+
+	^ self new
+		initializeWithName: classNameString
+		traitComposition: traitCompositionString
+		category: categoryString
+		instVarNames: ivarArray
+		classTraitComposition: classTraitCompositionString
+		classInstVarNames: civarArray
+		comment: commentString
+		commentStamp: commentStamp
 ]
 
 { #category : #'instance creation' }
-MCTraitDefinition class >> name: classNameString traitComposition:  traitCompositionString category:  categoryString instVarNames: ivarArray comment: commentString commentStamp: commentStamp [
-	^ self instanceLike:
-		(self new initializeWithName: classNameString 
-			traitComposition:  traitCompositionString
-			category:  categoryString
-			instVarNames: ivarArray
-			comment:  commentString  
-			commentStamp:   commentStamp)
+MCTraitDefinition class >> name: classNameString traitComposition: traitCompositionString category: categoryString instVarNames: ivarArray classInstVarNames: civarArray comment: commentString commentStamp: commentStamp [
+	^ self new
+		initializeWithName: classNameString
+		traitComposition: traitCompositionString
+		category: categoryString
+		instVarNames: ivarArray
+		classInstVarNames: civarArray
+		comment: commentString
+		commentStamp: commentStamp
+]
 
+{ #category : #'instance creation' }
+MCTraitDefinition class >> name: classNameString traitComposition: traitCompositionString category: categoryString instVarNames: ivarArray comment: commentString commentStamp: commentStamp [
+	^ self new
+		initializeWithName: classNameString
+		traitComposition: traitCompositionString
+		category: categoryString
+		instVarNames: ivarArray
+		comment: commentString
+		commentStamp: commentStamp
+]
+
+{ #category : #'instance creation' }
+MCTraitDefinition class >> name: classNameString traitComposition: traitCompositionString classTraitComposition: classTraitComposition category: categoryString comment: commentString commentStamp: commentStamp [
+
+	^ self new
+		initializeWithName: classNameString
+		traitComposition: traitCompositionString
+		classTraitComposition: classTraitComposition
+		category: categoryString
+		comment: commentString
+		commentStamp: commentStamp 
 ]
 
 { #category : #comparing }
@@ -64,7 +88,7 @@ MCTraitDefinition >> accept: aVisitor [
 { #category : #printing }
 MCTraitDefinition >> classSlotDefinitionString [
 
-	^ self usesSpecialVariables 
+	^ self needsSlotClassDefinition 
 		ifTrue: [ self classInstanceVariables asString ]
 		ifFalse: [ 
 			String streamContents: [ :stream |
@@ -82,7 +106,7 @@ MCTraitDefinition >> createClass [
 		named: name
 		uses: (Smalltalk compiler evaluate: self traitCompositionString)
 		slots: self instanceVariables
-		category: category.
+		package: category.
 	trait ifNotNil: [
 		trait classComment: comment stamp: commentStamp.
 		self classInstanceVariables ifNotEmpty: [
@@ -117,7 +141,7 @@ MCTraitDefinition >> initializeWithName: classNameString
 		name := classNameString asSymbol.
 		traitComposition := traitCompositionString.
 	     category := categoryString.
-		comment := commentString withSqueakLineEndings.
+		comment := commentString withInternalLineEndings.
 		variables := OrderedCollection  new.
 		commentStamp :=  commentStampString ifNil: [self defaultCommentStamp]
 
@@ -135,11 +159,26 @@ MCTraitDefinition >> initializeWithName: classNameString
 		name := classNameString asSymbol.
 		traitComposition := traitCompositionString.
 	    category := categoryString.
-		comment := commentString withSqueakLineEndings.
+		comment := commentString withInternalLineEndings.
 		commentStamp :=  commentStampString ifNil: [self defaultCommentStamp].
 		variables := OrderedCollection  new.
 		self addVariables: ivarArray ofType: MCInstanceVariableDefinition.
 		self addVariables: civarArray ofType: MCClassInstanceVariableDefinition.
+]
+
+{ #category : #initializing }
+MCTraitDefinition >> initializeWithName: classNameString traitComposition: traitCompositionString category: categoryString instVarNames: ivarArray classTraitComposition: classTraitCompositionString classInstVarNames: civarArray comment: commentString commentStamp: commentStampString [
+
+	self
+		initializeWithName: classNameString
+		traitComposition: traitCompositionString
+		category: categoryString
+		instVarNames: ivarArray
+		classInstVarNames: civarArray
+		comment: commentString
+		commentStamp: commentStampString.
+
+		classTraitComposition := classTraitCompositionString
 ]
 
 { #category : #initializing }
@@ -153,11 +192,31 @@ MCTraitDefinition >> initializeWithName: classNameString
 		name := classNameString asSymbol.
 		traitComposition := traitCompositionString.
 	    category := categoryString.
-		comment := commentString withSqueakLineEndings.
+		comment := commentString withInternalLineEndings.
 		commentStamp :=  commentStampString ifNil: [self defaultCommentStamp].
 		variables := OrderedCollection  new.
 		self addVariables: ivarArray ofType: MCInstanceVariableDefinition.
 
+]
+
+{ #category : #initializing }
+MCTraitDefinition >> initializeWithName: classNameString 
+	traitComposition:  traitCompositionString
+	classTraitComposition: aClassTraitComposition
+	category:  categoryString
+	instVarNames: ivarArray
+	comment:  commentString  
+	commentStamp:   commentStampString [
+
+		name := classNameString asSymbol.
+		traitComposition := traitCompositionString.
+	    category := categoryString.
+		comment := commentString withInternalLineEndings.
+		commentStamp :=  commentStampString ifNil: [self defaultCommentStamp].
+		variables := OrderedCollection  new.
+		self addVariables: ivarArray ofType: MCInstanceVariableDefinition.
+
+	classTraitComposition := aClassTraitComposition
 ]
 
 { #category : #printing }
@@ -184,7 +243,7 @@ MCTraitDefinition >> printDefinitionOn: stream [
 		
 	stream
 		 tab;
-		 nextPutAll: 'category: ';
+		 nextPutAll: 'package: ';
 		 store: self category asString
 
 ]
@@ -195,11 +254,13 @@ MCTraitDefinition >> requirements [
 	testing for the first character beeing an uppercase character
 	(and thus not a special character such as {, # etc.)"
 
-	| tokens traitNames |
-	self hasTraitComposition ifFalse: [ ^Array new ].
-	tokens := traitComposition parseLiterals.
-	traitNames := tokens select: [:each | each first isUppercase].
-	^traitNames asArray
+	self hasTraitComposition
+		ifFalse: [ ^Array new ].	
+			
+	^ (((RBParser parseExpression: self traitCompositionString)
+			allChildren select: [ :e | e isVariable ])
+			collect: [ :e | e name ]
+			as: Set) asArray
 ]
 
 { #category : #printing }
@@ -207,7 +268,7 @@ MCTraitDefinition >> slotDefinitionString [
 
 	variables ifNil: [ ^ '{ }' ].
 
-	^ self usesSpecialVariables 
+	^ self needsSlotClassDefinition 
 		ifTrue: [ self instanceVariables asString ]
 		ifFalse: [ 
 			String streamContents: [ :stream |

@@ -551,7 +551,7 @@ FinderUI >> currentSearchMode [
 { #category : #accessing }
 FinderUI >> currentSearchMode: aSymbol [
 	self finder searchingStringSilently: self searchingTextArea contentMorph textMorph text asString.
-	self searchingTextArea contentMorph textMorph hasUnacceptedEdits: false.
+	self searchingTextArea contentMorph hasUnacceptedEdits: false.
 	self finder currentSearchMode: aSymbol
 ]
 
@@ -761,11 +761,6 @@ FinderUI >> initialExtent [
 { #category : #initialization }
 FinderUI >> initialize [
 	super initialize.
-	finder := nil.
-	forceSearch := nil.
-	searchingTextArea := nil.
-	sourceTextArea := nil.
-	useRegExCheckbox := nil.
 	wrapBlockOrSelector := [ :i | i asString ]
 ]
 
@@ -961,6 +956,12 @@ FinderUI >> searchingTextArea [
 { #category : #accessing }
 FinderUI >> selectedClass [
 	^ self finder selectedClass
+]
+
+{ #category : #accessing }
+FinderUI >> selectedClassOrMetaClass [
+
+	^ self selectedClass
 ]
 
 { #category : #accessing }

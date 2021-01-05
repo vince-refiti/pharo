@@ -397,7 +397,7 @@ SystemWindow class >> noteTopWindowIn: aWorld [
 { #category : #'top window' }
 SystemWindow class >> sendTopWindowToBack [
  	"Send the top window of the world to the back. Relies on #submorphs array being ordered top to bottom. "
-	ActiveWorld submorphs 
+	self currentWorld submorphs 
 		detect: [ :morph | morph isSystemWindow ] 
 		ifFound: [ :morph | morph sendToBack ].
 ]
@@ -438,8 +438,10 @@ SystemWindow class >> windowMenuOn: aBuilder [
 		action: [ aBuilder model showAbout ];
 		iconName: #smallHelpIcon;
 		withSeparatorAfter.
-	(aBuilder item: #'Change title...')
-		action: [ aBuilder model relabel ];
+	(aBuilder item: #'Change title')
+		action: [ aBuilder model relabel ].
+	(aBuilder item: #'Copy title')
+		action: [ aBuilder model copyTitle ];
 		withSeparatorAfter.
 	(aBuilder item: #'Send to back')
 		action: [ aBuilder model sendToBack ].
@@ -788,6 +790,12 @@ SystemWindow >> colorForInsets [
 	^self paneColor colorForInsets
 ]
 
+{ #category : #label }
+SystemWindow >> copyTitle [
+	Clipboard clipboardText: self label.
+	self inform: 'Window title copied.'
+]
+
 { #category : #initialization }
 SystemWindow >> createBox [
 	"create a button with default to be used in the label area"
@@ -858,8 +866,8 @@ SystemWindow >> deleteDiscardingChanges [
 	| thisWorld announcement animateClose |
 	animateClose := self visible
 		and: [ self world notNil
-				and: [ self theme settings animationSettings useAnimation
-						and: [ self theme settings animationSettings animateClosing ] ] ].
+				and: [ self theme shouldUseAnimations
+						and: [ self theme animationSettings animateClosing ] ] ].
 	self removePaneSplitters.	"in case we add some panes and reopen!"
 	thisWorld := self world.
 	self isFlexed
@@ -877,7 +885,7 @@ SystemWindow >> deleteDiscardingChanges [
 		window: self;
 		yourself.
 	self announce: announcement.
-	World announcer announce: announcement
+	self currentWorld announcer announce: announcement
 ]
 
 { #category : #'menu building' }
@@ -1270,7 +1278,7 @@ SystemWindow >> minimizeOrRestore [
 	|mc windowEvent |
 	isCollapsed
 		ifTrue: ["Expand -- restore panes to morphics structure"
-			self theme settings animationSettings useAnimation 
+			self theme shouldUseAnimations 
 				ifTrue: [self animateRestoreFromMinimized].
 			isCollapsed := false.
 			"Bring to front first"
@@ -1293,7 +1301,7 @@ SystemWindow >> minimizeOrRestore [
 			self
 				setBoundsWithFlex: (-100 @ -100 extent: 2 @ 2); "place offscreen"
 				hide.
-			self theme settings animationSettings useAnimation  
+			self theme shouldUseAnimations  
 				ifTrue: [self animateMinimize].
 			self isActive ifTrue: [
 				self world navigateVisibleWindowForward]].
@@ -1415,7 +1423,7 @@ SystemWindow >> openAsIsIn: aWorld [
 	
 	self announceOpened.
 	
-	World announcer 
+	self currentWorld announcer 
 		announce: (WindowOpened new
 						window: self;
 						yourself).
@@ -1448,7 +1456,7 @@ SystemWindow >> openInWorldExtent: extent [
 SystemWindow >> openModal [
 
 	self openInWorld.
-	Smalltalk ui theme runModal: self.
+	self theme runModal: self.
 ]
 
 { #category : #panes }
@@ -1699,7 +1707,7 @@ SystemWindow >> setLabel: aString [
 						label: aString;
 						yourself).
 	self announce: announcement.
-	World announcer announce: announcement.
+	self currentWorld announcer announce: announcement.
 	label ifNil: [^ self].
 	label contents: aString.
 	self labelWidgetAllowance.  "Sets it if not already"

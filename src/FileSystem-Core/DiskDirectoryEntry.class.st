@@ -1,3 +1,28 @@
+"
+DiskDirectoryEntry holds attributes for a single file / directory on the disk.
+
+The actual attributes are held in two arrays which are returned directly from the #fileAttributes:mask: primitive.  See statAttributes and accessAttributes, below.
+
+DiskDirectoryEntry's are not normally created directly, but are returned as a result of sending the #entry or #entries messages to a FileReference.
+
+If the receiver's file is a symbolic link, the information contained in the receiver is for the target file, not the symbolic link.  See also DiskSymlinkDirectoryEntry.
+
+ 
+Internal Representation and Key Implementation Points.
+
+    Instance Variables
+	accessAttributes:		<Array>  An array of booleans indicating whether the image has read, write and execute access to the file.
+	statAttributes:		<Array>  See File class>>primFileAttributes:mask: for the list of attributes.
+
+
+    Implementation Points
+
+- statAttributes mostly corresponds with the information returned by the posix stat() call, thus its name.
+- accessAttributes mostly corresponds with the information returned by the posix array() call, thus its name.
+
+accessAttributes is relatively expensive to retrieve, so is loaded lazily only if requested.
+
+"
 Class {
 	#name : #DiskDirectoryEntry,
 	#superclass : #FileSystemDirectoryEntry,
@@ -23,6 +48,13 @@ DiskDirectoryEntry class >> fileSystem: aFilesystem path: aPath [
 	"Create a directory entry given a filesystem and a path in such filesystem."
 
 	^ self reference: (aFilesystem referenceTo: aPath)
+]
+
+{ #category : #'instance creation' }
+DiskDirectoryEntry class >> reference: aFileReference statAttributes: anArray [
+	"Answer an instance of the receiver pre-loaded with the supplied attributes"
+
+	^self new initializeWithReference: aFileReference statAttributes: anArray
 ]
 
 { #category : #'instance creation' }
@@ -56,7 +88,7 @@ DiskDirectoryEntry >> accessAttributes: anArray [
 { #category : #accessing }
 DiskDirectoryEntry >> accessTime [
 
-	^DateAndTime fromSqueakTime: (self statAttributes at: 9)
+	^DateAndTime fromInternalTime: (self statAttributes at: 9)
 ]
 
 { #category : #accessing }
@@ -93,8 +125,7 @@ DiskDirectoryEntry >> changeTime [
 	"Answer the time the receivers metadata was last changed.
 	On platforms that don't support change time, use the modification time"
 
-	^DateAndTime fromSqueakTime: ((self statAttributes at: 11) ifNil: 
-						[self statAttributes at: 12 ])
+	^DateAndTime fromInternalTime: ((self statAttributes at: 11) ifNil: [ self statAttributes at: 12 ])
 
 ]
 
@@ -110,7 +141,7 @@ DiskDirectoryEntry >> changeUnixTime [
 DiskDirectoryEntry >> creationTime [
 	"Answer the receivers creation time.  If this is not available, answer the change time, i.e. the time at which the receivers metadata was last updated."
 
-	^DateAndTime fromSqueakTime: ((self statAttributes at: 12) ifNil: [ self statAttributes at: 11 ])
+	^DateAndTime fromInternalTime: ((self statAttributes at: 12) ifNil: [ self statAttributes at: 11 ])
 ]
 
 { #category : #accessing }
@@ -143,8 +174,6 @@ DiskDirectoryEntry >> getAllAttributes [
 	allAttributes := self primitives fileAttributes: self pathString mask: self allAttributeMask.
 	statAttributes := allAttributes at: 1.
 	accessAttributes := allAttributes at: 2.
-	(statAttributes at: 1) ifNotNil: 
-		[ statAttributes at: 1 put: (self primitives decodePathString: (statAttributes at: 1)) ].
 
 ]
 
@@ -152,15 +181,13 @@ DiskDirectoryEntry >> getAllAttributes [
 DiskDirectoryEntry >> getStatAttributes [
 	"Store the receivers stat() attributes for future reference"
 
-	statAttributes := self primitives fileAttributes: self pathString mask: self statAttributeMask.
-	(statAttributes at: 1) ifNotNil: 
-		[ statAttributes at: 1 put: (self primitives decodePathString: (statAttributes at: 1)) ].
-	^statAttributes
+	^statAttributes := self primitives fileAttributes: self pathString mask: self statAttributeMask.
+
 ]
 
 { #category : #accessing }
 DiskDirectoryEntry >> gid [
-	"Answer the UID of the owner of the receiver"
+	"Answer the GID of the owner of the receiver"
 	
 	^self statAttributes at: 7
 ]
@@ -172,15 +199,15 @@ DiskDirectoryEntry >> gtInspectAttributesIn: composite [
 	| attrDictionary |
 
 	attrDictionary := Dictionary new.
-	[self class methodsDo: [ :method |
+	self class methodsDo: [ :method |
 		method methodNode arguments size = 0 ifTrue:
 			[ attrDictionary at: method selector put:
-				(method selector value: self) ] ]]
-		on: FileDoesNotExistException
-		do: [ nil ].
+				([ (method selector value: self) ]
+					on: Error
+					do: [ 'N/A' translated ]) ] ].
 	^(attrDictionary gtInspectorItemsIn: composite)
 		when: [ attrDictionary isNotEmpty ];
-		title: 'Attributes';
+		title: 'Attributes' translated;
 		yourself.
 ]
 
@@ -189,6 +216,14 @@ DiskDirectoryEntry >> hasCreationTime [
 	"Answer a boolean indicating whether the receiver has a creation timestamp, or is just using the change timestamp."
 
 	^(self statAttributes at: 12) isNotNil
+]
+
+{ #category : #initialization }
+DiskDirectoryEntry >> initializeWithReference: aFileReference statAttributes: anArray [
+
+	super initialize.	
+	reference := aFileReference.
+	statAttributes := anArray
 ]
 
 { #category : #accessing }
@@ -247,6 +282,13 @@ DiskDirectoryEntry >> isFile [
 ]
 
 { #category : #testing }
+DiskDirectoryEntry >> isHidden [
+	"Answer a boolean indicating whether the receiver is hidden"
+
+	^reference fileSystem isHidden: reference attributes: self statAttributes
+]
+
+{ #category : #testing }
 DiskDirectoryEntry >> isReadable [
 	"Answer a boolean indicating whether the VM can read the receivers file"
 
@@ -271,6 +313,7 @@ DiskDirectoryEntry >> isSocket [
 DiskDirectoryEntry >> isSymlink [
 	"Answer true if the receiver is a symbolic link"
 
+	reference path isRoot ifTrue: [ ^false ].
 	"Don't use cached information as the values might reflect a target file accessed from a symlink."
 	^self primitives isSymlink: self pathString
 ]
@@ -293,7 +336,7 @@ DiskDirectoryEntry >> mode [
 DiskDirectoryEntry >> modificationTime [
 	"Answer the receiver's modification time"
 
-	^DateAndTime fromSqueakTime: (self statAttributes at: 10)
+	^DateAndTime fromInternalTime: (self statAttributes at: 10)
 ]
 
 { #category : #accessing }

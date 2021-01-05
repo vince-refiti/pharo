@@ -262,7 +262,7 @@ PharoDarkTheme >> errorPopperBackgroundColor [
 	^ Color red muchDarker 
 ]
 
-{ #category : #'initialize-release' }
+{ #category : #initialization }
 PharoDarkTheme >> initialize [
 
 	super initialize.
@@ -308,7 +308,7 @@ PharoDarkTheme >> menuBorderColor [
 
 { #category : #'accessing colors' }
 PharoDarkTheme >> menuBorderWidth [
-	^ self borderWidth * World displayScaleFactor
+	^ self borderWidth * self currentWorld displayScaleFactor
 ]
 
 { #category : #defaults }
@@ -317,7 +317,7 @@ PharoDarkTheme >> menuItemDisabledTextColorFor: aMenuItem [
 	^ Color lightGray
 ]
 
-{ #category : #'initialize-release' }
+{ #category : #initialization }
 PharoDarkTheme >> newRadioMarkerForm [
 	"Answer a new checkbox marker form."
 
@@ -359,9 +359,9 @@ PharoDarkTheme >> selectionTextColor [
 ]
 
 { #category : #defaults }
-PharoDarkTheme >> shStyleTable [
+PharoDarkTheme >> shStyleTableName [
 
-	^SHRBTextStyler darkStyleTable
+	^ #darkStyleTable
 ]
 
 { #category : #'fill-styles' }

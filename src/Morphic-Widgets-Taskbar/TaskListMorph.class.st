@@ -49,6 +49,7 @@ TaskListMorph class >> taskListSettingOn: aBuilder [
 	(aBuilder setting: #keepTaskListOpen)
 		label: 'Keep task list open';
 		description: 'Whether the tasklist is closed (and the selected window activated) when the command key is released';
+		default: false;
 		parent: #morphic;
 		selector: #keepOpen;
 		target: self.
@@ -142,7 +143,7 @@ TaskListMorph >> initializeLayout [
 TaskListMorph >> initializeTasks [
 	"Set up the current tasks."
 	
-	self tasks: ((World submorphs
+	self tasks: ((self currentWorld submorphs
 		collect: [:m | m taskbarTask])
 		select: [:m | m notNil]) asOrderedCollection
 ]

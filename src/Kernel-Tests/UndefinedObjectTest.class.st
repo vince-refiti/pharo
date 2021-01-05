@@ -22,30 +22,15 @@ UndefinedObjectTest >> testDeepCopy [
 ]
 
 { #category : #'tests - testing' }
-UndefinedObjectTest >> testHaltIfNil [
-	<haltOrBreakpointForTesting>
-
-	self should: [ nil haltIfNil] raise: Halt.
-]
-
-{ #category : #'tests - testing' }
 UndefinedObjectTest >> testIfNil [
 	<haltOrBreakpointForTesting>
-
-	self should: [ nil ifNil: [self halt]] raise: Halt.
-
-
-
+	self should: [ nil ifNil: [ self error ] ] raise: Error
 ]
 
 { #category : #'tests - testing' }
 UndefinedObjectTest >> testIfNilIfNotNil [
 	<haltOrBreakpointForTesting>
-
-	self should: [ nil ifNil: [self halt] ifNotNil: [self error] ] raise: Halt.
-
-
-
+	self should: [ nil ifNil: [ self error ] ifNotNil: [  ] ] raise: Error
 ]
 
 { #category : #'tests - testing' }
@@ -69,11 +54,7 @@ UndefinedObjectTest >> testIfNotNilDo [
 { #category : #'tests - testing' }
 UndefinedObjectTest >> testIfNotNilIfNil [
 	<haltOrBreakpointForTesting>
-
-	self should: [ nil ifNotNil: [self error] ifNil: [self halt] ] raise: Halt.
-
-
-
+	self should: [ nil ifNotNil: [  ] ifNil: [ self error ] ] raise: Error
 ]
 
 { #category : #'tests - testing' }
@@ -108,10 +89,9 @@ UndefinedObjectTest >> testNotNil [
 
 { #category : #'tests - printing' }
 UndefinedObjectTest >> testPrintOn [
-
 	| string |
-	string := String streamContents: [:stream | nil printOn: stream].
-	self assert: (string = 'nil').
+	string := String streamContents: [ :stream | nil printOn: stream ].
+	self assert: string equals: 'nil'
 ]
 
 { #category : #'tests - copying' }

@@ -17,9 +17,15 @@ Class {
 
 { #category : #current }
 DiskStore class >> activeClass [
-	self allSubclassesDo: [:ea | 
-		ea isActiveClass ifTrue: [^ ea]].
-	^ self
+
+	| writableClass |
+	
+	writableClass := self allSubclasses detect: [:each | 
+		each isActiveClass ] ifNone: [ ^ self ].
+	
+	^ SessionManager default currentSession isReadOnlyAccessMode
+		ifFalse: [ writableClass ]
+		ifTrue: [ writableClass readOnlyVariant ].
 ]
 
 { #category : #'system startup' }
@@ -27,7 +33,7 @@ DiskStore class >> checkVMVersion [
 	"Display a warning if the VM is too old"
 	| displayError |
 	displayError := [ ^ self inform: 'Your VM is too old for this image. Please download the latest VM.' ].
-	[(Smalltalk vm interpreterSourceDate > '2012-07-08+2:00' asDate)
+	[(Smalltalk vm interpreterSourceDate >= '2019-01-05' asDate)
 		ifFalse: displayError
 	] on: Error do: [ :e| displayError value ].
 ]
@@ -79,10 +85,30 @@ DiskStore class >> maxFileNameLength [
 	self subclassResponsibility 
 ]
 
-{ #category : #current }
+{ #category : #public }
+DiskStore class >> readOnlyVariant [
+
+	"return a class variant for read-only store. It should be properly defined in my subclasses"
+
+	^ self subclassResponsibility
+]
+
+{ #category : #initialization }
 DiskStore class >> reset [
 	DefaultWorkingDirectory := nil.
 	CurrentFS := nil
+]
+
+{ #category : #current }
+DiskStore class >> resetAsReadOnly [
+
+	self currentFileSystem beReadOnly
+]
+
+{ #category : #current }
+DiskStore class >> resetAsWritable [
+
+	self currentFileSystem beWritable
 ]
 
 { #category : #'system startup' }
@@ -99,6 +125,14 @@ DiskStore class >> startUp: resuming [
 	DefaultWorkingDirectory := self defaultWorkingDirectory.
 ]
 
+{ #category : #public }
+DiskStore class >> writableVariant [
+
+	"return a class variant for read-only store. It should be properly defined in my subclasses"
+
+	^ self
+]
+
 { #category : #comparing }
 DiskStore >> = other [
 	^ self species = other species
@@ -108,7 +142,19 @@ DiskStore >> = other [
 DiskStore >> accessTimeOf: aPath [
 	"Return the date of last access of the File described by aPath"
 
-	^DateAndTime fromSqueakTime: (File fileAttribute: (self stringFromPath: aPath) number: 9)
+	^DateAndTime fromInternalTime: (File fileAttribute: (self stringFromPath: aPath) number: 9)
+]
+
+{ #category : #public }
+DiskStore >> asReadOnlyStore [
+
+	^ self class readOnlyVariant createDefault
+]
+
+{ #category : #public }
+DiskStore >> asWritableStore [
+
+	^ self class writableVariant createDefault
 ]
 
 { #category : #private }
@@ -198,12 +244,11 @@ DiskStore >> changeTimeOf: aPath [
 	"Answer the time the metadata of aPath was last changed.
 	On platforms that don't support change time, use the modification time."
 
-	| pathString squeakTime |
-	
+	| pathString time |
 	pathString := self stringFromPath: aPath.
-	squeakTime := (File fileAttribute: pathString number: 11) ifNil: 
+	time := (File fileAttribute: pathString number: 11) ifNil: 
 			[ File fileAttribute: pathString number: 12 ].
-	^DateAndTime fromSqueakTime: squeakTime
+	^DateAndTime fromInternalTime: time
 ]
 
 { #category : #public }
@@ -248,12 +293,11 @@ DiskStore >> createDirectory: path [
 { #category : #accessing }
 DiskStore >> creationTimeOf: aPath [
 	"Answer the creation time of aPath.  If the platform doesn't support creation time, use change time"
-	| pathString squeakTime |
-
+	
+	| pathString time |
 	pathString := self stringFromPath: aPath.
-	squeakTime := (File fileAttribute: pathString number: 12) ifNil: 
-			[ File fileAttribute: pathString number: 11 ].
-	^DateAndTime fromSqueakTime: squeakTime
+	time := (File fileAttribute: pathString number: 12) ifNil: [ File fileAttribute: pathString number: 11 ].
+	^DateAndTime fromInternalTime: time
 
 ]
 
@@ -267,18 +311,17 @@ DiskStore >> defaultWorkingDirectory [
 
 { #category : #public }
 DiskStore >> delete: path [
-	| pathString encodedPathString |
-	
+	| pathString |
+
 	((self exists: path) or: [ self isSymlink: path ])
 		ifFalse: [ ^ FileDoesNotExistException signalWith: path ].
-		
+
 	pathString := self stringFromPath: path.
-	encodedPathString := File encodePathString: pathString.
-	
-	(self isDirectory: path)
-		ifTrue: [ File deleteDirectory: encodedPathString ]
-		ifFalse: [ 
-			(File named: pathString) delete ]
+
+	(self isDirectory: path) ifTrue: 
+		[ File deleteDirectory: (File encodePathString: pathString) ]
+	ifFalse: 
+		[ File deleteFile: pathString ]
 ]
 
 { #category : #accessing }
@@ -353,7 +396,9 @@ DiskStore >> entryFromNode: node path: path for: aFileSystem [
 
 	| entryPath |
 	entryPath := path / (self basenameFromEntry: node).
-	^DiskDirectoryEntry reference: (FileReference fileSystem: aFileSystem path: entryPath).
+	^DiskDirectoryEntry 
+		reference: (FileReference fileSystem: aFileSystem path: entryPath)
+		statAttributes: (node at: 2).
 
 ]
 
@@ -443,6 +488,7 @@ DiskStore >> isDiskFileSystem [
 
 { #category : #testing }
 DiskStore >> isExecutable: aPath [
+	"Answer a boolean indicating whether the supplied path is executable"
 
 	^File isExecutable: (self stringFromPath: aPath)
 ]
@@ -488,6 +534,12 @@ DiskStore >> isSymlink: aPath [
 ]
 
 { #category : #testing }
+DiskStore >> isWritable [
+
+	^ true
+]
+
+{ #category : #testing }
 DiskStore >> isWritable: aPath [
 
 	^File isWritable: (self stringFromPath: aPath)
@@ -502,7 +554,7 @@ DiskStore >> maxFileNameLength [
 DiskStore >> modificationTimeOf: aPath [
 	"Return the date of last modification of the File described by aPath"
 
-	^DateAndTime fromSqueakTime: (File fileAttribute: (self stringFromPath: aPath) number: 10)
+	^DateAndTime fromInternalTime: (File fileAttribute: (self stringFromPath: aPath) number: 10)
 ]
 
 { #category : #private }
@@ -535,6 +587,17 @@ DiskStore >> rename: sourcePath to: destinationPath [
 	targetPathString := self stringFromPath: destinationPath.
 	encodedTargetPathString := File encodePathString: targetPathString.
 	^ File rename: encodedSourcePathString to: encodedTargetPathString.
+]
+
+{ #category : #private }
+DiskStore >> rootEntry [
+	"Answer a pseudo Directory Entry for the root directory"
+
+	^(DiskDirectoryEntry
+		reference: (FileReference fileSystem: FileSystem disk path: Path root)
+		statAttributes: #(nil 8r40775 0 0 0 0 0 0 0 0 nil 0 22))
+			accessAttributes: #(true false true);
+			yourself
 ]
 
 { #category : #private }

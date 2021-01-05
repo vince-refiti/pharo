@@ -31,6 +31,21 @@ UITheme class >> allThemeClasses [
 		a themeName <= b themeName]
 ]
 
+{ #category : #accessing }
+UITheme class >> baseColor [
+	self subclassResponsibility 
+]
+
+{ #category : #accessing }
+UITheme class >> basePassiveBackgroundColor [ 
+	^ self subclassResponsibility 
+]
+
+{ #category : #accessing }
+UITheme class >> baseSelectionColor [ 
+	^ self subclassResponsibility 
+]
+
 { #category : #query }
 UITheme class >> beCurrent [
 	"Make a new instance of the receiver be the current theme."
@@ -56,7 +71,7 @@ UITheme class >> cleanUp [
 { #category : #accessing }
 UITheme class >> current [
 	"Answer the current ui theme.
-	WARNING: Direct access to this method is ill-adviced, use Smalltalk ui theme instead."
+	WARNING: Direct access to this method is ill-adviced, use self theme instead."
 
 	^Current ifNil: [
 		Current := PharoLightTheme newDefault.
@@ -87,15 +102,8 @@ UITheme class >> current: aUITheme [
 		balloonMorph setBalloonColorTo: aUITheme balloonBackgroundColor ].
 
 	aUITheme updateWorldDockingBars.
-	World themeChanged.
+	self currentWorld themeChanged.
 	(SystemWindow allSubInstances select:[:e | e owner isNil]) do:#themeChanged.
-]
-
-{ #category : #accessing }
-UITheme class >> currentAnimationSettings [
-	"Answer the current ui theme settings."
-
-	^ self currentSettings animationSettings
 ]
 
 { #category : #accessing }
@@ -103,6 +111,11 @@ UITheme class >> currentSettings [
 	"Answer the current ui theme settings."
 
 	^ self current settings
+]
+
+{ #category : #accessing }
+UITheme class >> darkBaseColor [
+	self subclassResponsibility 
 ]
 
 { #category : #accessing }
@@ -145,8 +158,12 @@ UITheme class >> isCurrent [
 
 { #category : #accessing }
 UITheme class >> lightBaseColor [
+	self subclassResponsibility 
+]
 
-	^ Color white
+{ #category : #accessing }
+UITheme class >> lightSelectionColor [ 
+	^ self subclassResponsibility 
 ]
 
 { #category : #accessing }
@@ -204,6 +221,11 @@ UITheme class >> resetDefaultSettings [
 	self defaultSettings: nil
 ]
 
+{ #category : #initialization }
+UITheme class >> setPreferredPreferences [ 
+	self subclassResponsibility 
+]
+
 { #category : #accessing }
 UITheme class >> standardThemeClass [
 	^ PharoLightTheme 
@@ -214,6 +236,11 @@ UITheme class >> themeName [
 	"Answer the friendly name of the theme."
 
 	self subclassResponsibility
+]
+
+{ #category : #accessing }
+UITheme class >> veryLightSelectionColor [ 
+	^ self subclassResponsibility 
 ]
 
 { #category : #services }
@@ -255,6 +282,11 @@ UITheme >> alertSound [
 	"Answer the alert sound."
 
 	^self soundTheme alertSound
+]
+
+{ #category : #accessing }
+UITheme >> animationSettings [
+	^ self settings animationSettings
 ]
 
 { #category : #accessing }
@@ -348,7 +380,7 @@ UITheme >> borderColor [
 
 { #category : #accessing }
 UITheme >> borderWidth [
-	^ 1 * World displayScaleFactor
+	^ 1 * self currentWorld displayScaleFactor
 ]
 
 { #category : #accessing }
@@ -523,7 +555,7 @@ UITheme >> buttonMiddleRightForm [
 UITheme >> buttonMinHeight [
 	"Answer the minumum height of a button for this theme."
 	
-	^24 * World displayScaleFactor
+	^ 18 * self currentWorld displayScaleFactor
 ]
 
 { #category : #defaults }
@@ -817,8 +849,8 @@ UITheme >> centeredAlertIn: aThemedMorph text: aStringOrText title: aString conf
 		title: aString;
 		text: aStringOrText.
 	aBlock value: dialog.
-	dialog left: ((World width / 2) - (dialog width /2)).
-	dialog top: ((World height / 2) - (dialog height /2)).
+	dialog left: ((self currentWorld width / 2) - (dialog width /2)).
+	dialog top: ((self currentWorld height / 2) - (dialog height /2)).
 	aThemedMorph openModal: dialog.
 	^ dialog cancelled not
 ]
@@ -878,7 +910,7 @@ UITheme >> checkboxButtonSelectedDisabledBorderStyleFor: aCheckboxButton [
 UITheme >> checkboxButtonSelectedDisabledFillStyleFor: aCheckboxButton [
 	"Return the selected disabled checkbox button fillStyle for the given button."
 	
-	^self checkboxButtonDisabledFillStyleFor: aCheckboxButton
+	^self checkboxButtonSelectedFillStyleFor:  aCheckboxButton
 ]
 
 { #category : #'fill-styles-buttons' }
@@ -2079,7 +2111,7 @@ UITheme >> dropListButtonLabelFor: aDropList [
 UITheme >> dropListControlButtonWidth [
 	"Answer the width of a drop list control button for this theme."
 	
-	^20
+	^ 18
 ]
 
 { #category : #'border-styles' }
@@ -2222,44 +2254,9 @@ UITheme >> fadeCheckboxWhenDisabled [
 	^true
 ]
 
-{ #category : #services }
-UITheme >> fileOpenIn: aThemedMorph title: title extensions: exts path: path preview: preview [
-	"Answer the result of a file open dialog with the given title, extensions path and preview type."
-
-	| fd |
-	self deprecated: 'Use UIManager default chooseExistingFileReference:extensions:path:preview:. instead.' on: '26 October 2018' in: #Pharo7.
-	fd := FileDialogWindow basicNew
-		basicTheme: aThemedMorph theme;
-		previewType: preview;
-		initialize;
-		title: title;
-		answerOpenFile.
-	exts ifNotNil: [ fd validExtensions: exts ].
-	path ifNotNil: [ fd selectPath: path ].
-	^ (aThemedMorph openModal: fd) answer
-]
-
-{ #category : #services }
-UITheme >> fileSaveIn: aThemedMorph title: title extensions: exts path: path [
-	"Answer the result of a file save dialog with the given title, extensions and path."
-
-	self deprecated: 'Use UIManager default chooseForSaveFileReference:extensions:path:preview:. instead.' on: '26 October 2018' in: #Pharo7.
-	^self fileSaveIn: aThemedMorph title: title initialAnswer: '' extensions: exts path: path
-]
-
-{ #category : #services }
-UITheme >> fileSaveIn: aThemedMorph title: title initialAnswer: aFileName extensions: exts path: path [
-	"Answer the result of a file save dialog with the given title, extensions and path."
-
-	| fd |
-	self deprecated: 'Use UIManager default chooseForSaveFileReference:extensions:path:preview:. instead.' on: '26 October 2018' in: #Pharo7.
-	fd := (FileDialogWindow newWithTheme: aThemedMorph theme)
-		title: title;
-		fileNameText: aFileName;
-		answerSaveFile.
-	exts ifNotNil: [ fd validExtensions: exts ].
-	path ifNotNil: [ fd selectPath: path ].
-	^ (aThemedMorph openModal: fd) answer
+{ #category : #accessing }
+UITheme >> fadedBackgroundWindows [
+	^ self settings fadedBackgroundWindows
 ]
 
 { #category : #accessing }
@@ -2577,17 +2574,20 @@ UITheme >> menuColor [
 
 { #category : #'fill-styles' }
 UITheme >> menuColorFor: aThemedMorph [
+
 	"Answer the menu color to use."
 
-	|w|
-	^self menuColor ifNil: [
-		aThemedMorph ifNil: [^self defaultMenuColor].
-		w := aThemedMorph isSystemWindow
-			ifTrue: [aThemedMorph]
-			ifFalse: [aThemedMorph ownerThatIsA: SystemWindow].
-		w isNil
-			ifTrue: [self defaultMenuColor]
-			ifFalse: [(w valueOfProperty: #paneColor) ifNil: [self defaultMenuColor]]]
+	| w |
+
+	^ self menuColor
+		ifNil: [ aThemedMorph ifNil: [ ^ self defaultMenuColor ].
+			w := aThemedMorph isSystemWindow
+				ifTrue: [ aThemedMorph ]
+				ifFalse: [ aThemedMorph ownerThatIsA: SystemWindow ].
+			w
+				ifNil: [ self defaultMenuColor ]
+				ifNotNil: [ ( w valueOfProperty: #paneColor ) ifNil: [ self defaultMenuColor ] ]
+			]
 ]
 
 { #category : #'fill-styles' }
@@ -2616,7 +2616,7 @@ UITheme >> menuItemDisabledTextColorFor: aMenuItem [
 	"Answer the color to use for disabled menu item text."
 
 	^((aMenuItem color luminance - aMenuItem owner color luminance) abs < 0.3)
-		ifTrue: [aMenuItem owner color contrastingColor muchDarker]
+		ifTrue: [aMenuItem owner color contrastingBlackAndWhiteColor muchDarker]
 		ifFalse: [aMenuItem owner color muchDarker]
 ]
 
@@ -2638,7 +2638,7 @@ UITheme >> menuItemNormalTextColorFor: aMenuItem [
 	"Answer the color to use for normal menu item text."
 
 	^((aMenuItem color luminance - aMenuItem owner paneColor luminance) abs < 0.3)
-		ifTrue: [aMenuItem owner paneColor contrastingColor]
+		ifTrue: [aMenuItem owner paneColor contrastingBlackAndWhiteColor]
 		ifFalse: [aMenuItem color]
 ]
 
@@ -2652,20 +2652,24 @@ UITheme >> menuItemSelectedBorderStyleFor: aMenuItem [
 
 { #category : #'fill-styles-buttons' }
 UITheme >> menuItemSelectedFillStyleFor: aMenuItem [
+
 	"Answer the selected fill style to use for the given menu item."
-	
+
 	| fill baseColor preferenced |
-	Display depth <= 2 ifTrue: [^ Color gray].
-	preferenced := self settings menuSelectionColor.
-	baseColor := preferenced isNil
-		ifTrue: [aMenuItem owner color negated]
-		ifFalse: [preferenced].
+
+	Display depth <= 2
+		ifTrue: [ ^ Color gray ].
+	preferenced := self menuSelectionColor.
+	baseColor := preferenced ifNil: [ aMenuItem owner color negated ] ifNotNil: [ preferenced ].
 	self preferGradientFill
-		ifFalse: [^baseColor].
-	fill := GradientFillStyle ramp: {0.0 -> baseColor twiceLighter . 1 -> baseColor twiceDarker}.
+		ifFalse: [ ^ baseColor ].
+	fill := GradientFillStyle
+		ramp:
+			{( 0.0 -> baseColor twiceLighter ).
+			( 1 -> baseColor twiceDarker )}.
 	fill
 		origin: aMenuItem topLeft;
-		direction: 0@aMenuItem height.
+		direction: 0 @ aMenuItem height.
 	^ fill
 ]
 
@@ -2689,6 +2693,11 @@ UITheme >> menuPinForm [
 ]
 
 { #category : #'accessing colors' }
+UITheme >> menuSelectionColor [
+	^ self settings menuSelectionColor
+]
+
+{ #category : #'accessing colors' }
 UITheme >> menuShadowColor [
 	^ self settings menuShadowColor
 ]
@@ -2701,17 +2710,20 @@ UITheme >> menuTitleColor [
 
 { #category : #'fill-styles' }
 UITheme >> menuTitleColorFor: aThemedMorph [
+
 	"Answer the menu titlecolor to use."
 
-	|w|
-	^self menuTitleColor ifNil: [
-		aThemedMorph ifNil: [^self defaultMenuTitleColor].
-		w := aThemedMorph isSystemWindow
-			ifTrue: [aThemedMorph]
-			ifFalse: [aThemedMorph ownerThatIsA: SystemWindow].
-		w isNil
-			ifTrue: [self defaultMenuTitleColor]
-			ifFalse: [(w valueOfProperty: #paneColor) darker ifNil: [self defaultMenuTitleColor]]]
+	| w |
+
+	^ self menuTitleColor
+		ifNil: [ aThemedMorph ifNil: [ ^ self defaultMenuTitleColor ].
+			w := aThemedMorph isSystemWindow
+				ifTrue: [ aThemedMorph ]
+				ifFalse: [ aThemedMorph ownerThatIsA: SystemWindow ].
+			w
+				ifNil: [ self defaultMenuTitleColor ]
+				ifNotNil: [ ( w valueOfProperty: #paneColor ) darker ifNil: [ self defaultMenuTitleColor ] ]
+			]
 ]
 
 { #category : #'fill-styles' }
@@ -2738,7 +2750,7 @@ UITheme >> menubarFillStyleFor: aMenubar [
 
 { #category : #'fill-styles-menubar' }
 UITheme >> menubarItemSelectionFillStyleFor: aMenubarItem [
-	^ self settings menuSelectionColor
+	^ self menuSelectionColor
 ]
 
 { #category : #'fill-styles-menubar' }
@@ -2965,7 +2977,7 @@ UITheme >> newAutoAcceptTextEntryIn: aThemedMorph for: aModel  get: getSel set: 
 	is provided in case of initial nil returns."
 
 	|pt|
-	pt := PluggableTextFieldMorph new
+	pt := RubPluggableTextFieldMorph new
 		autoAccept: true;
 		alwaysAccept: true;
 		convertTo: aClass;
@@ -2981,15 +2993,8 @@ UITheme >> newAutoAcceptTextEntryIn: aThemedMorph for: aModel  get: getSel set: 
 		hResizing: #spaceFill;
 		vResizing: #rigid;
 		borderStyle: (BorderStyle inset width: 1);
-		selectionColor: self selectionColor;
-		hideScrollBarsIndefinitely;
-		extent: 24@(aFont height + 8);
 		setBalloonText: helpText;
 		entryCompletion: anEntryCompletion.
-	pt textMorph
-		autoFit: true;
-		wrapFlag: false;
-		margins: (2@1) asMargin.
 	^pt
 
 ]
@@ -3550,7 +3555,7 @@ UITheme >> newDialogPanelIn: aThemedMorph [
 UITheme >> newDropListIn: aThemedMorph for: aModel list: listSel getSelected: getSel setSelected: setSel getEnabled: enabledSel useIndex: useIndex help: helpText [
 	"Answer a drop list for the given model."
 
-	^(DropListMorph basicNew
+	^(EditableDropListMorph basicNew
 		basicTheme: self;
 			initialize;
 			useSelectionIndex: useIndex;
@@ -3566,7 +3571,9 @@ UITheme >> newDropListIn: aThemedMorph for: aModel list: listSel getSelected: ge
 		hResizing: #spaceFill;
 		vResizing: #shrinkWrap;
 		setBalloonText: helpText;
-		basicTheme: nil
+		basicTheme: nil;
+		beReadOnly;
+		yourself
 ]
 
 { #category : #'morph creation' }
@@ -4357,7 +4364,7 @@ UITheme >> newTaskbarThumbnailIn: aThemedMorph for: aWindow [
 UITheme >> newTextEditorIn: aThemedMorph for: aModel getText: getSel setText: setSel getEnabled: enabledSel menu: aMenuSelector [
 	"Answer a text (Smalltalk code) editor for the given model."
 
-	^PluggableTextMorph new
+	^ RubPluggableTextMorph new
 		on: aModel
 		text: getSel
 		accept: setSel
@@ -4370,8 +4377,6 @@ UITheme >> newTextEditorIn: aThemedMorph for: aModel getText: getSel setText: se
 		hResizing: #spaceFill;
 		vResizing: #spaceFill;
 		borderStyle: (BorderStyle inset width: 1);
-		"color: Color darkGray;
-		selectionColor: self selectionColor;"
 		removeProperty: #theme
 ]
 
@@ -4380,7 +4385,7 @@ UITheme >> newTextEntryIn: aThemedMorph for: aModel get: getSel set: setSel clas
 	"Answer a text entry for the given model."
 
 	|pt|
-	pt := PluggableTextFieldMorph new
+	pt := RubPluggableTextFieldMorph new
 		convertTo: aClass;
 		alwaysAccept: true;
 		on: aModel
@@ -4394,16 +4399,7 @@ UITheme >> newTextEntryIn: aThemedMorph for: aModel get: getSel set: setSel clas
 		cornerStyle: (self textEntryCornerStyleIn: aThemedMorph);
 		hResizing: #spaceFill;
 		vResizing: #rigid;
-		borderStyle: (BorderStyle inset width: 1);
-		"color: Color white;"
-		selectionColor: self selectionColor;
-		hideScrollBarsIndefinitely;
-		extent: 24@(self textFont height + 8);
 		setBalloonText: helpText.
-	pt textMorph
-		autoFit: true;
-		wrapFlag: false;
-		margins: (2@1) asMargin.
 	^pt
 ]
 
@@ -4412,7 +4408,7 @@ UITheme >> newTextEntryIn: aThemedMorph for: aModel get: getSel set: setSel clas
 	"Answer a text entry for the given model."
 
 	|pt|
-	pt := PluggableTextFieldMorph new
+	pt := RubPluggableTextFieldMorph new
 		convertTo: aClass;
 		alwaysAccept: true;
 		on: aModel
@@ -4426,18 +4422,8 @@ UITheme >> newTextEntryIn: aThemedMorph for: aModel get: getSel set: setSel clas
 		cornerStyle: (self textEntryCornerStyleIn: aThemedMorph);
 		hResizing: #spaceFill;
 		vResizing: #rigid;
-		borderStyle: (BorderStyle inset width: 1);
-		"color: Color darkGray;
-		selectionColor: self selectionColor;"
-		hideScrollBarsIndefinitely;
-		extent: 24@(self textFont height + 8);
 		setBalloonText: helpText;
 		entryCompletion: anEntryCompletion.
-
-	pt textMorph
-		autoFit: true;
-		wrapFlag: false;
-		margins: (2@1) asMargin.
 	^pt
 ]
 
@@ -4509,10 +4495,10 @@ UITheme >> newToolbarIn: aThemedMorph [
 		listDirection: #leftToRight;
 		hResizing: #shrinkWrap;
 		vResizing: #shrinkWrap.
-	bar
+	"bar
 		addMorphBack: (self newToolSpacerIn: aThemedMorph);
 		addMorphBack: (self newToolbarHandleIn: aThemedMorph);
-		addMorphBack: (self newToolSpacerIn: aThemedMorph).
+		addMorphBack: (self newToolSpacerIn: aThemedMorph)."
 	^bar
 ]
 
@@ -4715,6 +4701,11 @@ UITheme >> normalFillStyleWithBaseColor: aColor for: aMorph height: anInteger [
 		radial: false
 ]
 
+{ #category : #accessing }
+UITheme >> numberOfStepsForAnimations [
+	^ self animationSettings numberOfSteps
+]
+
 { #category : #cursor }
 UITheme >> overTextCursorFor: aTextMorph [
 	"Answer the pointer cursor when over an active text 
@@ -4726,10 +4717,10 @@ UITheme >> overTextCursorFor: aTextMorph [
 { #category : #'fill-styles' }
 UITheme >> paneColorFor: aWindow [
 	"Answer the pane color that should be used."
-	
-	^self settings fadedBackgroundWindows
-		ifTrue: [aWindow fillStyleToUse asColor]
-		ifFalse: [(self windowActiveFillStyleFor: aWindow) asColor]
+
+	^ (self fadedBackgroundWindows
+		ifTrue: [ aWindow fillStyleToUse ]
+		ifFalse: [ self windowActiveFillStyleFor: aWindow ]) asColor
 ]
 
 { #category : #services }
@@ -5038,7 +5029,7 @@ UITheme >> scrollbarMinimumThumbThickness [
 	"Answer the minumum width or height of a scrollbar thumb 
 	as appropriate to its orientation."
 	
-	^15 * World displayScaleFactor
+	^15 * self currentWorld displayScaleFactor
 ]
 
 { #category : #'border-styles-scrollbars' }
@@ -5265,7 +5256,7 @@ UITheme >> scrollbarThickness [
 	"Answer the width or height of a scrollbar as appropriate to
 	its orientation."
 	
-	^13 * World displayScaleFactor
+	^13 * self currentWorld displayScaleFactor
 ]
 
 { #category : #'fill-styles' }
@@ -5391,7 +5382,23 @@ UITheme >> settings: anObject [
 { #category : #accessing }
 UITheme >> shStyleTable [
 
-	^SHRBTextStyler blueStyleTable
+	"Styling depends on shout. If it is not present, means there is no style 
+	 table to apply"
+	^ (self class environment classNamed: #SHRBTextStyler)
+		ifNotNil: [ :aClass | aClass perform: self shStyleTableName ]
+		ifNil: [ #() ]
+
+]
+
+{ #category : #accessing }
+UITheme >> shStyleTableName [
+
+	^ #blueStyleTable
+]
+
+{ #category : #testing }
+UITheme >> shouldUseAnimations [
+	^ self animationSettings useAnimation
 ]
 
 { #category : #'border-styles' }
@@ -5929,11 +5936,12 @@ UITheme >> unfocusedSelectionColor [
 ]
 
 { #category : #scrollbars }
-UITheme >> updateScrollBarButtonAspect: aMorph color: aColor [ 
-	"update aMorph with aColor"
-	aMorph isNil ifTrue: [^ self].
-	aMorph color: aColor.
+UITheme >> updateScrollBarButtonAspect: aMorph color: aColor [
 
+	"update aMorph with aColor"
+
+	aMorph ifNil: [ ^ self ].
+	aMorph color: aColor
 ]
 
 { #category : #scrollbars }
@@ -5949,7 +5957,7 @@ UITheme >> updateScrollBarButtonsAspect: aCollection color: aColor [
 UITheme >> updateWorldDockingBars [
 	"Update the world docking bar gradients."
 	
-	World mainDockingBars do: [:d |
+	self currentWorld mainDockingBars do: [:d |
 		d
 			color: (self worldMainDockingBarColorFor: d);
 			gradientRamp: (self class current
@@ -5960,6 +5968,11 @@ UITheme >> updateWorldDockingBars [
 { #category : #'accessing colors' }
 UITheme >> urlColor [
 	^ Color fromHexString: '03A9F4'
+]
+
+{ #category : #accessing }
+UITheme >> useAnimation: aBoolean [
+	^ self animationSettings useAnimation: aBoolean
 ]
 
 { #category : #'fill-styles-scrollbars' }
@@ -6110,7 +6123,7 @@ UITheme >> windowActiveTitleFillStyleFor: aWindow [
 { #category : #defaults }
 UITheme >> windowBorderWidthFor: aWindow [
 
-	^ 4 * World displayScaleFactor
+	^ 4 * self currentWorld displayScaleFactor
 ]
 
 { #category : #defaults }
@@ -6217,9 +6230,9 @@ UITheme >> windowInactiveFillStyleFor: aWindow [
 UITheme >> windowInactiveLabelFillStyleFor: aWindow [
 	"Return the window inactive label fillStyle for the given window."
 	
-	^self settings fadedBackgroundWindows
-		ifTrue: [aWindow paneColorToUse alphaMixed: 0.6 with: Color black]
-		ifFalse: [self windowActiveLabelFillStyleFor: aWindow]
+	^ self fadedBackgroundWindows
+		ifTrue: [ aWindow paneColorToUse alphaMixed: 0.6 with: Color black ]
+		ifFalse: [ self windowActiveLabelFillStyleFor: aWindow ]
 ]
 
 { #category : #'fill-styles' }

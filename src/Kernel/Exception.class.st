@@ -97,6 +97,15 @@ Exception class >> signalIn: context [
 	^ self new signalIn: context
 ]
 
+{ #category : #private }
+Exception >> completeProcess: aProcess with: aContext [
+	"I am a hook during process completion in case one of my subclass wants to plug a special behavior.
+	
+	By default I return my signaler context"
+
+	^ self signalerContext
+]
+
 { #category : #handling }
 Exception >> debug [
 	"open a debugger on myself"
@@ -281,7 +290,7 @@ Exception >> searchFrom: aContext [
 { #category : #signaling }
 Exception >> signal [
 	"Ask ContextHandlers in the sender chain to handle this signal.  The default is to execute and return my defaultAction."
-
+	<debuggerCompleteToSender>
 	signalContext := thisContext contextTag.
 	signaler ifNil: [ signaler := self receiver ].
 	^ signalContext nextHandlerContext handleSignal: self

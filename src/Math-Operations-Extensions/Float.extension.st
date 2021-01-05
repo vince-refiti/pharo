@@ -20,10 +20,12 @@ Float >> arcSin [
 { #category : #'*Math-Operations-Extensions' }
 Float >> arcTan: denominator [
 	"Answer the angle in radians.
-	 Optional. See Object documentation whatIsAPrimitive.
 	Implementation note: use sign in order to catch cases of negativeZero"
-
-	^self = 0.0
+	
+	"(-0.5 arcTan: -0.5) >>> -2.356194490192345"
+	"(1.2 arcTan: 1.5) >>>  0.6747409422235526"
+	"(1.2 arcTan: -1.5) >>> 2.4668517113662407"
+	^ self = 0.0
 		ifTrue: [denominator signBit = 0
 			ifTrue: [ 0 ]
 			ifFalse: [ self signBit = 0
@@ -259,7 +261,7 @@ Float >> reduce [
 { #category : #'*Math-Operations-Extensions' }
 Float >> round: numberOfWishedDecimal [
 	"Round the decimal part of the receiver to be limited to the number of wished decimal. Only leave a fixed amount of decimal"
-   "10.12345 round: 2 >>> 10.12 "
+   "(10.12345 round: 2) >>> 10.12 "
         
 	^(self asFraction round: numberOfWishedDecimal) asFloat
 

@@ -27,8 +27,14 @@ RBUsesTrueRule class >> uniqueIdentifierName [
 
 { #category : #running }
 RBUsesTrueRule >> check: aMethod forCritiquesDo: aCriticBlock [
-	((aMethod refersToLiteral: trueBinding) or: [ aMethod refersToLiteral: falseBinding ]) ifTrue: [ 
-		aCriticBlock cull: (self critiqueFor: aMethod) ]
+	| problemUsages |
+	aMethod methodClass isTrait ifTrue: [ ^ self ].
+	problemUsages := aMethod ast allChildren select: [ :aNode | 
+		                 aNode isVariable and: [ 
+			                 aNode isGlobal and: [ 
+				                 #( True False ) includes: aNode name ] ] ].
+	problemUsages do: [ :ref | 
+		aCriticBlock cull: (self createTrivialCritiqueOn: aMethod intervalOf: ref hint: ref name asString)]
 ]
 
 { #category : #accessing }

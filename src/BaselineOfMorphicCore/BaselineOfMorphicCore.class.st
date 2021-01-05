@@ -39,6 +39,9 @@ BaselineOfMorphicCore >> baseline: spec [
 		spec package: 'System-VMEvents'.
 		spec package: 'System-Object Events'.
 		spec package: 'Graphics-Canvas'.
+		spec package: 'Tool-Registry'.
+		spec package: 'Fonts-Abstract'.
+		spec package: 'Text-Core'.
 		spec package: 'Morphic-Core'.
 	].
 ]
@@ -59,6 +62,8 @@ BaselineOfMorphicCore >> postload: loader package: packageSpec [
 	WorldState initialize.
 	Morph initialize.
 	HandMorph initialize.
+	
+	AbstractWorldRenderer initialize.	
 
 	Cursor initTarget.
 	EventManager initialize.

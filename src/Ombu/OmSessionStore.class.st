@@ -8,7 +8,6 @@ Class {
 		'currentSession',
 		'currentImagePathString',
 		'currentStore',
-		'alternativeStore',
 		'baseLocator',
 		'announcer',
 		'writingDeferDuration',
@@ -218,6 +217,8 @@ OmSessionStore >> resetWithStoreNamed: newName [
 		inDirectory: self directory.
 	fileReference exists ifTrue: [
 		FileExists signalWith: fileReference ].
+	
+	self directory fileSystem isWritable ifFalse: [ ^ self ].
 	
 	"Then, we can proceed."
 	currentSession := Smalltalk session.

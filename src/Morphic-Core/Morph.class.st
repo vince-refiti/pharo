@@ -1116,6 +1116,12 @@ Morph >> asMorph [
 ]
 
 { #category : #converting }
+Morph >> asReadOnlyMorph [
+
+	^ self
+]
+
+{ #category : #converting }
 Morph >> asText [
 
 	| anchor embedMorphSignal |
@@ -1198,6 +1204,14 @@ Morph >> balloonText [
 				text asString withNoLineLongerThan: self theme settings maxBalloonHelpLineLength]
 ]
 
+{ #category : #theme }
+Morph >> basicTheme: aUITheme [
+	"Set the current theme for the receiver without notification of change."
+
+	self theme = aUITheme ifFalse: [
+		self setProperty: #theme toValue: aUITheme]
+]
+
 { #category : #accessing }
 Morph >> beSticky [
 	"make the receiver sticky"
@@ -1221,7 +1235,7 @@ Morph >> becomeModal [
 		ifNotNil: [self currentWorld modalWindow: self]
 ]
 
-{ #category : #'Morphic-Base-Widgets' }
+{ #category : #'base-widgets' }
 Morph >> beginsWith: aString fromList: aMorph [
 	| string |
 	string := self userString ifNil: [(self submorphs collect: [:m | m userString]) detect: [:us | us notNil] ifNone: ['']].
@@ -1778,7 +1792,7 @@ Morph >> changed: anAspect with: anObject [
 		arguments: anObject)
 ]
 
-{ #category : #'Morphic-Base-Worlds' }
+{ #category : #'base-worlds' }
 Morph >> clearArea [
 	"Answer the clear area of the receiver. It means the area free  
 	of docking bars."
@@ -2046,8 +2060,7 @@ Morph >> deepCopy [
 Morph >> defaultBackgroundColor [
 	"Answer the color to be used as the base window color for a window whose model is an object of the receiver's class"
 	
-	"I don't want to do a self theme  because otherwise I will need to implement it on Object"
-	^  Smalltalk ui theme windowColorFor: self
+	^  self theme windowColorFor: self
 ]
 
 { #category : #initialize }
@@ -2153,7 +2166,7 @@ Morph >> dismissMorph [
 
 	| w |
 	w := self world ifNil:[^self].
-	w deleteAllHalos; stopStepping: self.
+	w stopStepping: self.
 	self delete
 ]
 
@@ -2181,7 +2194,7 @@ Morph >> displayExtentChanged [
 { #category : #settings }
 Morph >> displayScaleFactor [
 
-	^ World displayScaleFactor
+	^ self currentWorld displayScaleFactor
 ]
 
 { #category : #announcements }
@@ -2921,32 +2934,34 @@ Morph >> handleMouseDown: anEvent [
 { #category : #'events-processing' }
 Morph >> handleMouseEnter: anEvent [
 	"System level event handling."
-	(anEvent isDraggingEvent) ifTrue:[
-		(self handlesMouseOverDragging: anEvent) ifTrue:[
-			anEvent wasHandled: true.
-			self mouseEnterDragging: anEvent].
-		^ self eventHandler ifNotNil: [:handler | handler mouseEnterDragging: anEvent fromMorph: self ]].
-	self wantsBalloon
-		ifTrue:[anEvent hand triggerBalloonFor: self after: self balloonHelpDelayTime].
-	(self handlesMouseOver: anEvent) ifTrue:[
-		anEvent wasHandled: true.
-		self mouseEnter: anEvent ].
-	^ self eventHandler ifNotNil: [:handler | handler mouseEnter: anEvent fromMorph: self ].
+
+	anEvent isDraggingEvent
+		ifTrue: [ (self handlesMouseOverDragging: anEvent)
+				ifTrue: [ anEvent wasHandled: true.
+					self mouseEnterDragging: anEvent ].
+			^ self eventHandler ifNotNil: [ :handler | handler mouseEnterDragging: anEvent fromMorph: self ] ].
+	self wantsBalloon ifTrue: [ anEvent hand triggerBalloonFor: self after: self balloonHelpDelayTime ].
+
+	^ (self handlesMouseOver: anEvent)
+		ifTrue: [ anEvent wasHandled: true.
+			self mouseEnter: anEvent ]
+		ifFalse: [ self eventHandler ifNotNil: [ :handler | handler mouseEnter: anEvent fromMorph: self ] ]
 ]
 
 { #category : #'events-processing' }
 Morph >> handleMouseLeave: anEvent [
 	"System level event handling."
+
 	anEvent hand removePendingBalloonFor: self.
-	anEvent isDraggingEvent ifTrue:[
-		(self handlesMouseOverDragging: anEvent) ifTrue:[
-			anEvent wasHandled: true.
-			self mouseLeaveDragging: anEvent].
-		^ self eventHandler ifNotNil: [:handler | handler mouseLeave: anEvent fromMorph: self ]].
-	(self handlesMouseOver: anEvent) ifTrue:[
-		anEvent wasHandled: true.
-		self mouseLeave: anEvent ].
-	^ self eventHandler ifNotNil: [:handler | handler mouseLeave: anEvent fromMorph: self ]
+	anEvent isDraggingEvent
+		ifTrue: [ (self handlesMouseOverDragging: anEvent)
+				ifTrue: [ anEvent wasHandled: true.
+					self mouseLeaveDragging: anEvent ].
+			^ self eventHandler ifNotNil: [ :handler | handler mouseLeave: anEvent fromMorph: self ] ].
+	^ (self handlesMouseOver: anEvent)
+		ifTrue: [ anEvent wasHandled: true.
+			self mouseLeave: anEvent ]
+		ifFalse: [ self eventHandler ifNotNil: [ :handler | handler mouseLeave: anEvent fromMorph: self ] ]
 ]
 
 { #category : #'events-processing' }
@@ -3147,12 +3162,14 @@ Morph >> handlesMouseDown: evt [
 
 { #category : #'events-processing' }
 Morph >> handlesMouseMove: anEvent [
-	"Rules say that by default a morph gets #mouseMove iff
+	"Rules say that by default a morph gets #mouseMove if
 		* the hand is not dragging anything,
 			+ and some button is down,
 			+ and the receiver is the current mouse focus."
 			
-	"self eventHandler ifNotNil: [:handler | ^handler handlesMouseMove: anEvent ]."
+	self eventHandler ifNotNil: [ :handler | 
+		(handler handlesMouseMove: anEvent) ifTrue: [ 
+			^ true ] ].
 				
 	^anEvent hand submorphs isEmpty and: [ 	 
 		(anEvent anyButtonPressed and:[
@@ -3352,7 +3369,7 @@ Morph >> height: aNumber [
 
 ]
 
-{ #category : #'Morphic-Base-Widgets' }
+{ #category : #'base-widgets' }
 Morph >> heightToDisplayInList: aList [
 
 	^ self minExtent y
@@ -3501,11 +3518,11 @@ Morph >> initialExtent [
 { #category : #initialization }
 Morph >> initialize [
 	"initialize the state of the receiver"
+
 	super initialize.
-	owner := nil.
 	submorphs := EmptyArray.
 	bounds := self defaultBounds.
-	color := self defaultColor.
+	color := self defaultColor
 ]
 
 { #category : #'accessing - extension' }
@@ -3973,7 +3990,7 @@ Morph >> listDirectionString: aSymbol [
 	^self layoutMenuPropertyString: aSymbol from: self listDirection
 ]
 
-{ #category : #'Morphic-Base-Widgets' }
+{ #category : #'base-widgets' }
 Morph >> listRenderOn: aCanvas atRow: aRow bounds: drawBounds color: drawColor backgroundColor: backgroundColor from: aMorph [
 
 	self bounds: drawBounds.
@@ -4568,7 +4585,7 @@ Morph >> outermostOwnerWithYellowButtonMenu [
 { #category : #structure }
 Morph >> outermostWorldMorph [
 
-	^self world ifNil: [ World ].
+	^self world ifNil: [ self currentWorld ].
 ]
 
 { #category : #geometry }
@@ -4625,13 +4642,13 @@ Morph >> ownerThatIsA: aClass [
 	^ self firstOwnerSuchThat: [:m | m isKindOf: aClass]
 ]
 
-{ #category : #'Morphic-Base-Worlds' }
+{ #category : #'base-worlds' }
 Morph >> pasteUpMorph [
 	"Answer the closest containing morph that is a PasteUp morph"
 	^ self ownerThatIsA: PasteUpMorph
 ]
 
-{ #category : #'Morphic-Base-Worlds' }
+{ #category : #'base-worlds' }
 Morph >> pasteUpMorphHandlingTabAmongFields [
 	"Answer the nearest PasteUpMorph in my owner chain that has the tabAmongFields property, or nil if none"
 
@@ -4759,14 +4776,14 @@ Morph >> preferredDuplicationHandleSelector [
 { #category : #'event handling' }
 Morph >> preferredKeyboardBounds [
 
-	^ self bounds: self bounds in: World.
+	^ self bounds: self bounds in: self currentWorld.
 
 ]
 
 { #category : #'event handling' }
 Morph >> preferredKeyboardPosition [
 
-	^ (self bounds: self bounds in: World) topLeft.
+	^ (self bounds: self bounds in: self currentWorld) topLeft.
 
 ]
 
@@ -5382,9 +5399,8 @@ Morph >> root [
 Morph >> rootMorphsAt: aPoint [
 	"Return the list of root morphs containing the given point, excluding the receiver.
 	ar 11/8/1999: Moved into morph for an incredibly ugly hack in 3D worlds"
-self flag: #arNote. "check this at some point"
-	^ self submorphs select:
-		[:m | (m fullContainsPoint: aPoint) and: [m isLocked not]]
+
+	^ self submorphs select: [ :m | (m fullContainsPoint: aPoint) and: [ m isLocked not ] ]
 ]
 
 { #category : #'rotate scale and flex' }
@@ -6014,7 +6030,7 @@ Morph >> tabHitWithEvent: anEvent [
 	itemToHighlight := fieldList atWrap: 
 		(anIndex ifNotNil: [anEvent shiftPressed ifTrue: [anIndex - 1] ifFalse: [anIndex + 1]]
 				ifNil: [1]).
-	anEvent hand newKeyboardFocus: itemToHighlight. self flag: #arNote. "really???"
+	anEvent hand newKeyboardFocus: itemToHighlight. "really???"
 	itemToHighlight editor selectAll.
 	itemToHighlight invalidRect: itemToHighlight bounds 
 ]
@@ -6049,6 +6065,33 @@ Morph >> textAnchorType: aSymbol [
 	aSymbol == #document
 		ifTrue:[^self removeProperty: #textAnchorType]
 		ifFalse:[^self setProperty: #textAnchorType toValue: aSymbol].
+]
+
+{ #category : #theme }
+Morph >> theme [
+	"Answer the current theme for the receiver."
+
+	(self valueOfProperty: #theme) ifNotNil: [:t | ^ t].
+	^(self owner ifNil: [self class]) theme
+]
+
+{ #category : #theme }
+Morph >> theme: aUITheme [
+	"Set the current theme for the receiver and propagate theme changed to submorphs."
+
+	self theme = aUITheme ifFalse: [
+		self setProperty: #theme toValue: aUITheme.
+		"we do not invoke basicTheme: to avoid checking twice if the theme changed or not"
+		self themeChanged]
+]
+
+{ #category : #theme }
+Morph >> themeChanged [
+	"The current theme has changed.
+	Update any dependent visual aspects."
+
+	self submorphsDo: [:m | m themeChanged].
+	self changed
 ]
 
 { #category : #rounding }
@@ -6132,7 +6175,7 @@ Morph >> topLeft: aPoint [
 
 ]
 
-{ #category : #'Morphic-Base-Worlds' }
+{ #category : #'base-worlds' }
 Morph >> topPasteUp [
 	"If the receiver is in a world, return that; otherwise return the outermost pasteup morph"
 	^ self outermostMorphThat: [:m | m isKindOf: PasteUpMorph]
@@ -6447,7 +6490,7 @@ Morph >> veryDeepInner: deepCopier [
 	extension := (extension veryDeepCopyWith: deepCopier)
 ]
 
-{ #category : #'Morphic-Base-Worlds' }
+{ #category : #'base-worlds' }
 Morph >> viewBox [
 	^ self pasteUpMorph viewBox
 ]
@@ -6617,7 +6660,7 @@ Morph >> width: aNumber [
 
 ]
 
-{ #category : #'Morphic-Base-Widgets' }
+{ #category : #'base-widgets' }
 Morph >> widthToDisplayInList: aList [
 
 	^ self minExtent x

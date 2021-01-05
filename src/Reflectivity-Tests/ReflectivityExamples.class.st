@@ -28,6 +28,13 @@ ReflectivityExamples class >> metaLinkOptions [
 	}
 ]
 
+{ #category : #initialization }
+ReflectivityExamples >> compileTemporaryMethods [
+	self class compile: 'methodToBeRemoved ^nil'.
+	self class compile: 'methodToBeModified ^nil'.
+	self class compile: 'stubMethod ^nil'
+]
+
 { #category : #examples }
 ReflectivityExamples >> exampleArray [
 	^ {3}
@@ -49,6 +56,12 @@ ReflectivityExamples >> exampleAssignmentClassVar [
 { #category : #examples }
 ReflectivityExamples >> exampleAssignmentIvar [
 	ivar := (1 + 2).
+	^ivar
+]
+
+{ #category : #examples }
+ReflectivityExamples >> exampleAssignmentIvar: anObject [
+	ivar := anObject.
 	^ivar
 ]
 
@@ -112,6 +125,11 @@ ReflectivityExamples >> exampleLiteralArray [
 ]
 
 { #category : #examples }
+ReflectivityExamples >> exampleMessageSend [
+	self tagExec: #yes
+]
+
+{ #category : #examples }
 ReflectivityExamples >> exampleMethod [
 
 	^ 2 + 3
@@ -125,7 +143,7 @@ ReflectivityExamples >> exampleMethod2 [
 
 { #category : #examples }
 ReflectivityExamples >> exampleMethodMultipleSites [
-	Transcript show: Object new.
+	self trace: Object new.
 	^ 2 + 3
 ]
 
@@ -177,6 +195,16 @@ ReflectivityExamples >> exampleWithArg: anArg [
 ReflectivityExamples >> initialize [
 	ivar := 33.
 	ClassVar := #AClassVar.
+	self removeTemporaryMethods.
+	self compileTemporaryMethods
+]
+
+{ #category : #initialization }
+ReflectivityExamples >> removeTemporaryMethods [
+	
+	self class removeSelector: #methodToBeRemoved.
+	self class removeSelector: #methodToBeModified.
+	self class removeSelector: #stubMethod
 ]
 
 { #category : #tagging }

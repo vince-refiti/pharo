@@ -1,11 +1,11 @@
 "
-A RBArrayNode is an AST node for runtime arrays.
+An RBArrayNode is an AST node for runtime arrays.
 
 Instance Variables
 	left:	 <Integer | nil> position of {
 	periods: <SequenceableCollection of: Integer> the positions of all the periods that separate the statements
 	right: <Integer | nil> position of }
-	statements: <SequenceableCollection of: RBStatementNode> the statement nodes
+	statements: <SequenceableCollection of: RBValueNode> the statement nodes
 "
 Class {
 	#name : #RBArrayNode,
@@ -102,18 +102,6 @@ RBArrayNode >> children [
 { #category : #matching }
 RBArrayNode >> copyInContext: aDictionary [ 
 	^ self class statements: (self copyList: self statements inContext: aDictionary)
-]
-
-{ #category : #generation }
-RBArrayNode >> dumpOn: aStream [
-	aStream
-		nextPutAll: self class name;
-		nextPutAll: ' statements: { '.
-	self statements
-		do: [ :each | 
-			each dumpOn: aStream.
-			aStream nextPutAll: '. ' ].
-	aStream nextPut: $}
 ]
 
 { #category : #comparing }

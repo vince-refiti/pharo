@@ -85,7 +85,7 @@ TabMorph class >> closeOverIconContents [
 
 { #category : #accessing }
 TabMorph class >> defaultHeight [
-	^ 22 * World displayScaleFactor 
+	^ 22 * self currentWorld displayScaleFactor 
 ]
 
 { #category : #initialize }
@@ -139,7 +139,7 @@ TabMorph class >> label: label icon: icon retrievingBlock: morph actions: aColle
 { #category : #icons }
 TabMorph class >> menuIcon [
 
-	^ Smalltalk ui theme windowMenuForm
+	^ self theme windowMenuForm
 ]
 
 { #category : #icons }
@@ -424,7 +424,7 @@ TabMorph >> blueButtonUp: anEvent [
 { #category : #'private-drawing' }
 TabMorph >> borderColor [
 	"I do not use #borderColor because I want a light border"
-	^ Smalltalk ui theme lightBackgroundColor
+	^ self theme lightBackgroundColor
 ]
 
 { #category : #'private-drawing' }
@@ -597,22 +597,20 @@ TabMorph >> iconRightOffset [
 
 { #category : #initialization }
 TabMorph >> initialize [
-
 	super initialize.
-	
+
 	self changeProportionalLayout.
-	
+
 	state := TabEnabled tab: self.
 	closeable := true.
 	label := self buildLabel: 'tab' withIcon: self defaultIcon.
 	closeIcon := AlphaImageMorph withForm: self class closeIcon scaledByDisplayScaleFactor.
-	morph := nil.
 	actions := OrderedCollection new.
 	retrievingSemaphore := Semaphore new.
-	
+
 	self addLabel.
 	self addIcon.
-	self addActionsToIcon.
+	self addActionsToIcon
 ]
 
 { #category : #accessing }
@@ -699,8 +697,7 @@ TabMorph >> morph: anObject [
 
 { #category : #'event handling' }
 TabMorph >> mouseDown: event [
-
-	self flag: 'ToDo: Add drag'
+	self flag: #pharoTodo. "Add drag"
 ]
 
 { #category : #'icons-actions' }
